@@ -8,16 +8,20 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ModeToggle } from '@/components/mode-toggle';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">Freebox</h1>
-          <p className="text-muted-foreground text-lg">
-            A marketplace where everything is free
-          </p>
+        <div className="flex justify-between items-center">
+          <div className="text-center space-y-4 flex-1">
+            <h1 className="text-4xl font-bold">Freebox</h1>
+            <p className="text-muted-foreground text-lg">
+              A marketplace where everything is free
+            </p>
+          </div>
+          <ModeToggle />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
