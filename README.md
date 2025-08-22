@@ -20,6 +20,71 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Authentication Setup
+
+This project uses NextAuth.js with Google OAuth for authentication. The current setup uses JWT strategy (no database required).
+
+### 1. Create Google OAuth Credentials
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google+ API
+4. Go to "Credentials" and create an OAuth 2.0 Client ID
+5. Add `http://localhost:3000/api/auth/callback/google` to the authorized redirect URIs
+6. Copy the Client ID and Client Secret
+
+### 2. Generate NEXTAUTH_SECRET
+
+Generate a secure secret key for NextAuth.js:
+
+```bash
+openssl rand -base64 32
+```
+
+### 3. Update Environment Variables
+
+Update your `.env` file with your Google OAuth credentials:
+
+```env
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-generated-secret-key-here"
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+```
+
+### 4. Test Authentication
+
+Once configured, you can:
+
+- Visit the main page and click "Sign in with Google"
+- See your profile picture and email when signed in
+- Sign out using the dropdown menu
+
+## Features
+
+- **Dark Mode** - Toggle between light, dark, and system themes
+- **Authentication** - Google OAuth sign-in with NextAuth.js (JWT strategy)
+- **UI Components** - Built with shadcn/ui
+- **Responsive Design** - Works on all screen sizes
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── api/auth/[...nextauth]/route.ts  # NextAuth.js API routes
+│   ├── globals.css                      # Global styles
+│   ├── layout.tsx                       # Root layout with providers
+│   └── page.tsx                         # Homepage
+├── components/
+│   ├── ui/                             # shadcn/ui components
+│   ├── auth-provider.tsx               # NextAuth SessionProvider
+│   ├── login-btn.tsx                   # Login/logout button
+│   └── mode-toggle.tsx                 # Dark mode toggle
+└── lib/
+    └── utils.ts                        # Utility functions
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

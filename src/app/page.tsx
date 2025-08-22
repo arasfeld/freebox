@@ -1,3 +1,8 @@
+import Link from 'next/link';
+
+import LoginBtn from '@/components/login-btn';
+import { ModeToggle } from '@/components/mode-toggle';
+
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -8,7 +13,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ModeToggle } from '@/components/mode-toggle';
 
 export default function Home() {
   return (
@@ -21,7 +25,10 @@ export default function Home() {
               A marketplace where everything is free
             </p>
           </div>
-          <ModeToggle />
+          <div className="flex items-center gap-4">
+            <LoginBtn />
+            <ModeToggle />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -95,6 +102,12 @@ export default function Home() {
               <li>Set expiration dates for items</li>
               <li>Manage their profile and pickup information</li>
             </ul>
+
+            <div className="mt-6 pt-4 border-t">
+              <Link href="/test-auth">
+                <Button variant="outline">Test Authentication</Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
