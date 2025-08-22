@@ -1,5 +1,8 @@
 import NextAuth, { type NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+
+import { prisma } from '@/lib/prisma';
 
 declare module 'next-auth' {
   interface Session {
@@ -21,6 +24,7 @@ declare module 'next-auth/jwt' {
 }
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -28,30 +32,16 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: {
-    strategy: 'jwt' as const,
+    strategy: 'database' as const,
   },
   callbacks: {
-    async jwt({ token, user, account }) {
-      // Persist the OAuth access_token to the token right after signin
-      if (account) {
-        token.accessToken = account.access_token;
-      }
-      if (user) {
-        token.id = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
+    async session({ session, user }) {
       // Send properties to the client, like an access_token from a provider.
-      session.accessToken = token.accessToken;
-      if (token.id) {
-        session.user.id = token.id;
+      if (user) {
+        session.user.id = user.id;
       }
       return session;
     },
-  },
-  pages: {
-    signIn: '/auth/signin',
   },
 };
 

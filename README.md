@@ -22,7 +22,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Authentication Setup
 
-This project uses NextAuth.js with Google OAuth for authentication. The current setup uses JWT strategy (no database required).
+This project uses NextAuth.js with Google OAuth for authentication, backed by Prisma PostgreSQL for persistent user data.
 
 ### 1. Create Google OAuth Credentials
 
@@ -50,9 +50,25 @@ NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-generated-secret-key-here"
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
+DATABASE_URL="your-prisma-postgres-database-url"
 ```
 
-### 4. Test Authentication
+### 4. Set up Database
+
+The project uses Prisma PostgreSQL for user data persistence:
+
+```bash
+# Install dependencies
+npm install
+
+# Generate Prisma client
+npx prisma generate --no-engine
+
+# Run database migrations
+npx prisma migrate dev
+```
+
+### 5. Test Authentication
 
 Once configured, you can:
 
@@ -63,7 +79,7 @@ Once configured, you can:
 ## Features
 
 - **Dark Mode** - Toggle between light, dark, and system themes
-- **Authentication** - Google OAuth sign-in with NextAuth.js (JWT strategy)
+- **Authentication** - Google OAuth sign-in with NextAuth.js and Prisma PostgreSQL
 - **UI Components** - Built with shadcn/ui
 - **Responsive Design** - Works on all screen sizes
 
@@ -81,8 +97,11 @@ src/
 │   ├── auth-provider.tsx               # NextAuth SessionProvider
 │   ├── login-btn.tsx                   # Login/logout button
 │   └── mode-toggle.tsx                 # Dark mode toggle
-└── lib/
-    └── utils.ts                        # Utility functions
+├── lib/
+│   ├── prisma.ts                       # Prisma client with Accelerate
+│   └── utils.ts                        # Utility functions
+└── prisma/
+    └── schema.prisma                   # Database schema
 ```
 
 ## Learn More
