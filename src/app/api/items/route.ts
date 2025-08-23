@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search');
     const category = searchParams.get('category');
     const location = searchParams.get('location');
     const status = searchParams.get('status');
@@ -16,13 +17,24 @@ export async function GET(request: NextRequest) {
       category?: string;
       location?: { contains: string; mode: 'insensitive' };
       status?: 'AVAILABLE' | 'RESERVED' | 'TAKEN';
+      OR?: Array<{
+        title?: { contains: string; mode: 'insensitive' };
+        description?: { contains: string; mode: 'insensitive' };
+      }>;
     } = {};
 
-    if (category) {
+    if (search && search.trim()) {
+      where.OR = [
+        { title: { contains: search.trim(), mode: 'insensitive' } },
+        { description: { contains: search.trim(), mode: 'insensitive' } },
+      ];
+    }
+
+    if (category && category !== 'all') {
       where.category = category;
     }
 
-    if (location) {
+    if (location && location !== 'all') {
       where.location = {
         contains: location,
         mode: 'insensitive',

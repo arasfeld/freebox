@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { Search } from 'lucide-react';
+
+import { useSearch } from '@/hooks/use-search';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,35 +37,42 @@ const locations = [
 ];
 
 export function SearchFilters() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('all');
-  const [location, setLocation] = useState('all');
+  const {
+    filters,
+    setSearch,
+    setCategory,
+    setLocation,
+    clearFilters,
+    hasActiveFilters,
+  } = useSearch();
 
-  const handleSearch = () => {
-    // TODO: Implement search functionality
-    console.log('Search:', { searchTerm, category, location });
-  };
+  // Keyboard shortcut to clear filters (Escape key)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && hasActiveFilters) {
+        clearFilters();
+      }
+    };
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setCategory('all');
-    setLocation('all');
-  };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [clearFilters, hasActiveFilters]);
 
   return (
     <Card>
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
+              placeholder="Search items by title or description..."
+              value={filters.search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10"
             />
           </div>
 
-          <Select value={category} onValueChange={setCategory}>
+          <Select value={filters.category} onValueChange={setCategory}>
             <SelectTrigger>
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -76,7 +86,7 @@ export function SearchFilters() {
             </SelectContent>
           </Select>
 
-          <Select value={location} onValueChange={setLocation}>
+          <Select value={filters.location} onValueChange={setLocation}>
             <SelectTrigger>
               <SelectValue placeholder="Location" />
             </SelectTrigger>
@@ -92,10 +102,24 @@ export function SearchFilters() {
         </div>
 
         <div className="flex justify-between items-center mt-4">
-          <Button variant="outline" onClick={clearFilters}>
+          <Button
+            variant="outline"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+          >
             Clear Filters
           </Button>
-          <Button onClick={handleSearch}>Search</Button>
+          <div className="text-sm text-muted-foreground">
+            {hasActiveFilters && (
+              <span>
+                Filters applied • Press{' '}
+                <kbd className="px-1 py-0.5 text-xs bg-muted rounded border">
+                  Esc
+                </kbd>{' '}
+                to clear
+              </span>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

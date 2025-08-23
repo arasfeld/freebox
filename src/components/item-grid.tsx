@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { useSearch } from '@/hooks/use-search';
 
 interface Item {
   id: string;
@@ -30,15 +32,28 @@ export function ItemGrid() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { filters } = useSearch();
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/items');
+      const params = new URLSearchParams();
+
+      if (filters.search) {
+        params.append('search', filters.search);
+      }
+      if (filters.category !== 'all') {
+        params.append('category', filters.category);
+      }
+      if (filters.location !== 'all') {
+        params.append('location', filters.location);
+      }
+
+      const url = `/api/items${
+        params.toString() ? `?${params.toString()}` : ''
+      }`;
+      const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error('Failed to fetch items');
       }
@@ -49,7 +64,16 @@ export function ItemGrid() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  // Debounce the API call to avoid too many requests
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchItems();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [fetchItems]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -95,82 +119,110 @@ export function ItemGrid() {
   if (items.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-xl font-semibold mb-2">No items available</h3>
+        <h3 className="text-xl font-semibold mb-2">
+          {filters.search ||
+          filters.category !== 'all' ||
+          filters.location !== 'all'
+            ? 'No items found'
+            : 'No items available'}
+        </h3>
         <p className="text-muted-foreground mb-4">
-          Be the first to post an item in your community!
+          {filters.search ||
+          filters.category !== 'all' ||
+          filters.location !== 'all'
+            ? 'Try adjusting your search criteria or browse all items.'
+            : 'Be the first to post an item in your community!'}
         </p>
-        <Button asChild>
-          <Link href="/post-item">Post an Item</Link>
-        </Button>
+        <div className="flex justify-center gap-2">
+          {(filters.search ||
+            filters.category !== 'all' ||
+            filters.location !== 'all') && (
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Browse All Items
+            </Button>
+          )}
+          <Button asChild>
+            <Link href="/post-item">Post an Item</Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {items.map((item) => (
-        <Card key={item.id} className="hover:shadow-lg transition-shadow">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <CardTitle className="text-lg line-clamp-2">
-                {item.title}
-              </CardTitle>
-              <Badge className={getStatusColor(item.status)}>
-                {item.status}
-              </Badge>
-            </div>
-            {item.category && (
-              <Badge variant="outline" className="w-fit">
-                {item.category}
-              </Badge>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {item.images.length > 0 && (
-              <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden">
-                <Image
-                  src={item.images[0]}
-                  alt={item.title}
-                  fill
-                  className="object-cover"
-                />
+    <>
+      {!loading && (
+        <div className="mb-6">
+          <p className="text-sm text-muted-foreground">
+            {items.length} item{items.length !== 1 ? 's' : ''} found
+          </p>
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {items.map((item) => (
+          <Card key={item.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <CardTitle className="text-lg line-clamp-2">
+                  {item.title}
+                </CardTitle>
+                <Badge className={getStatusColor(item.status)}>
+                  {item.status}
+                </Badge>
               </div>
-            )}
-
-            {item.description && (
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {item.description}
-              </p>
-            )}
-
-            {item.location && (
-              <p className="text-sm text-muted-foreground">
-                📍 {item.location}
-              </p>
-            )}
-
-            <div className="flex items-center justify-between pt-2 border-t">
-              <div className="flex items-center space-x-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage
-                    src={item.user.image || ''}
-                    alt={item.user.name || ''}
+              {item.category && (
+                <Badge variant="outline" className="w-fit">
+                  {item.category}
+                </Badge>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {item.images.length > 0 && (
+                <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden">
+                  <Image
+                    src={item.images[0]}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
                   />
-                  <AvatarFallback className="text-xs">
-                    {item.user.name?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm text-muted-foreground">
-                  {item.user.name || 'Anonymous'}
-                </span>
+                </div>
+              )}
+
+              {item.description && (
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {item.description}
+                </p>
+              )}
+
+              {item.location && (
+                <p className="text-sm text-muted-foreground">
+                  📍 {item.location}
+                </p>
+              )}
+
+              <div className="flex items-center justify-between pt-2 border-t">
+                <div className="flex items-center space-x-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage
+                      src={item.user.image || ''}
+                      alt={item.user.name || ''}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {item.user.name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-muted-foreground">
+                    {item.user.name || 'Anonymous'}
+                  </span>
+                </div>
+                <Button size="sm" asChild>
+                  <Link href={`/items/${item.id}`}>View Details</Link>
+                </Button>
               </div>
-              <Button size="sm" asChild>
-                <Link href={`/items/${item.id}`}>View Details</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </>
   );
 }
