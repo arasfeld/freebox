@@ -29,6 +29,26 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+model Item {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  images      String[]   // Array of image URLs
+  category    String?
+  location    String?
+  status      ItemStatus @default(AVAILABLE)
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum ItemStatus {
+  AVAILABLE
+  RESERVED
+  TAKEN
+}
+
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
@@ -45,6 +65,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  items         Item[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }

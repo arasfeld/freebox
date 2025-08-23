@@ -1,116 +1,83 @@
-import Link from 'next/link';
+import { Suspense } from 'react';
+
+import { Button } from '@/components/ui/button';
 
 import LoginBtn from '@/components/login-btn';
 import { ModeToggle } from '@/components/mode-toggle';
+import { ItemGrid } from '@/components/item-grid';
+import { SearchFilters } from '@/components/search-filters';
 
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex justify-between items-center">
-          <div className="text-center space-y-4 flex-1">
-            <h1 className="text-4xl font-bold">Freebox</h1>
-            <p className="text-muted-foreground text-lg">
-              A marketplace where everything is free
-            </p>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-2xl font-bold">Freebox</h1>
+            <p className="text-muted-foreground">Everything is free</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-4">
             <LoginBtn />
             <ModeToggle />
           </div>
         </div>
+      </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Button Component</CardTitle>
-              <CardDescription>
-                Testing different button variants
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button>Default Button</Button>
-              <Button variant="secondary">Secondary Button</Button>
-              <Button variant="outline">Outline Button</Button>
-              <Button variant="destructive">Destructive Button</Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Input Component</CardTitle>
-              <CardDescription>Testing input fields</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="Enter your email" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Card Component</CardTitle>
-              <CardDescription>This is a card component</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Cards are great for organizing content into sections.
-              </p>
-            </CardContent>
-          </Card>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold mb-4">Give & Get for Free</h2>
+          <p className="text-xl mb-8 text-blue-100">
+            Join the community where everything is free. Post items you
+            don&apos;t need, find items you want.
+          </p>
+          <div className="flex justify-center space-x-4">
+            <Button size="lg" variant="secondary" asChild>
+              <a href="/post-item">Post an Item</a>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="bg-white/10 text-white border-white/30 hover:bg-white hover:text-blue-600 backdrop-blur-sm"
+            >
+              Browse Items
+            </Button>
+          </div>
         </div>
+      </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Welcome to Freebox</CardTitle>
-            <CardDescription>
-              This is a test page to verify that shadcn/ui components are
-              working correctly.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              The Freebox app will be a marketplace where users can give away
-              items they no longer need and find items they want, all for free.
-              Users will be able to:
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-              <li>Post items with descriptions and images</li>
-              <li>Create groups for access control</li>
-              <li>Claim items with optional messages</li>
-              <li>Set expiration dates for items</li>
-              <li>Manage their profile and pickup information</li>
-            </ul>
+      {/* Search and Filters */}
+      <section className="py-8 border-b">
+        <div className="container mx-auto px-4">
+          <SearchFilters />
+        </div>
+      </section>
 
-            <div className="mt-6 pt-4 border-t">
-              <Link href="/test-auth">
-                <Button variant="outline">Test Authentication</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Items Grid */}
+      <section className="py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-semibold">Available Items</h3>
+            <Button asChild>
+              <a href="/post-item">Post an Item</a>
+            </Button>
+          </div>
+
+          <Suspense
+            fallback={<div className="text-center py-8">Loading items...</div>}
+          >
+            <ItemGrid />
+          </Suspense>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t py-8 mt-16">
+        <div className="container mx-auto px-4 text-center text-muted-foreground">
+          <p>&copy; 2024 Freebox. A marketplace where everything is free.</p>
+        </div>
+      </footer>
     </div>
   );
 }
