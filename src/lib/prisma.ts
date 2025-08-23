@@ -1,11 +1,26 @@
 import { PrismaClient } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: ReturnType<typeof createPrismaClient> | undefined;
+  prisma: PrismaClient | undefined;
 };
 
-const createPrismaClient = () => new PrismaClient().$extends(withAccelerate());
+const createPrismaClient = () => {
+  const client = new PrismaClient({
+    log: ['error', 'warn'],
+  });
+
+  // Add connection error handling
+  client
+    .$connect()
+    .then(() => {
+      console.log('✅ Prisma Client connected successfully');
+    })
+    .catch((error) => {
+      console.error('❌ Prisma Client connection failed:', error);
+    });
+
+  return client;
+};
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
