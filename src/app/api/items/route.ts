@@ -13,10 +13,19 @@ export async function GET(request: NextRequest) {
     const location = searchParams.get('location');
     const status = searchParams.get('status');
 
+    const session = await getServerSession(authOptions);
+    const currentUserId = session?.user?.email
+      ? (
+          await prisma.user.findUnique({
+            where: { email: session.user.email },
+          })
+        )?.id
+      : null;
+
     const where: {
       category?: string;
       location?: { contains: string; mode: 'insensitive' };
-      status?: 'AVAILABLE' | 'RESERVED' | 'TAKEN';
+      status?: 'AVAILABLE' | 'PENDING' | 'TAKEN';
       OR?: Array<{
         title?: { contains: string; mode: 'insensitive' };
         description?: { contains: string; mode: 'insensitive' };
@@ -43,9 +52,9 @@ export async function GET(request: NextRequest) {
 
     if (
       status &&
-      (status === 'AVAILABLE' || status === 'RESERVED' || status === 'TAKEN')
+      (status === 'AVAILABLE' || status === 'PENDING' || status === 'TAKEN')
     ) {
-      where.status = status as 'AVAILABLE' | 'RESERVED' | 'TAKEN';
+      where.status = status as 'AVAILABLE' | 'PENDING' | 'TAKEN';
     } else {
       // Default to showing only available items
       where.status = 'AVAILABLE';
@@ -62,13 +71,34 @@ export async function GET(request: NextRequest) {
             image: true,
           },
         },
+        interests: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    return NextResponse.json(items);
+    // Add additional fields for the frontend
+    const itemsWithMetadata = items.map((item) => ({
+      ...item,
+      isOwner: currentUserId === item.userId,
+      hasExpressedInterest: currentUserId
+        ? item.interests.some((interest) => interest.userId === currentUserId)
+        : false,
+    }));
+
+    return NextResponse.json(itemsWithMetadata);
   } catch (error) {
     console.error('Error fetching items:', error);
     return NextResponse.json(

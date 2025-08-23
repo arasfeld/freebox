@@ -15,30 +15,36 @@ import {
 } from '@/components/ui/select';
 import { SortOptions } from '@/components/sort-options';
 
-import { useSearch } from '@/hooks/use-search';
+import {
+  clearFilters,
+  setCategory,
+  setLocation,
+  setSearch,
+  setSortBy,
+} from '@/lib/features/search/searchSlice';
+import {
+  selectHasActiveFilters,
+  selectSearchFilters,
+  selectSortBy,
+} from '@/lib/features/search/searchSelectors';
+import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 
 import { CATEGORIES, LOCATIONS } from '@/types/search';
 
 export function SearchFilters() {
-  const {
-    filters,
-    sortBy,
-    setSearch,
-    setCategory,
-    setLocation,
-    setSortBy,
-    clearFilters,
-    hasActiveFilters,
-  } = useSearch();
+  const dispatch = useAppDispatch();
+  const filters = useAppSelector(selectSearchFilters);
+  const sortBy = useAppSelector(selectSortBy);
+  const hasActiveFilters = useAppSelector(selectHasActiveFilters);
 
   // Keyboard shortcut to clear filters (Escape key)
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === 'Escape' && hasActiveFilters) {
-        clearFilters();
+        dispatch(clearFilters());
       }
     },
-    [clearFilters, hasActiveFilters]
+    [dispatch, hasActiveFilters]
   );
 
   useEffect(() => {
@@ -75,12 +81,15 @@ export function SearchFilters() {
             <Input
               placeholder="Search items by title or description..."
               value={filters.search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => dispatch(setSearch(e.target.value))}
               className="w-full pl-10"
             />
           </div>
 
-          <Select value={filters.category} onValueChange={setCategory}>
+          <Select
+            value={filters.category}
+            onValueChange={(value) => dispatch(setCategory(value))}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -90,7 +99,10 @@ export function SearchFilters() {
             </SelectContent>
           </Select>
 
-          <Select value={filters.location} onValueChange={setLocation}>
+          <Select
+            value={filters.location}
+            onValueChange={(value) => dispatch(setLocation(value))}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Location" />
             </SelectTrigger>
@@ -105,12 +117,15 @@ export function SearchFilters() {
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={clearFilters}
+              onClick={() => dispatch(clearFilters())}
               disabled={!hasActiveFilters}
             >
               Clear Filters
             </Button>
-            <SortOptions value={sortBy} onValueChange={setSortBy} />
+            <SortOptions
+              value={sortBy}
+              onValueChange={(value) => dispatch(setSortBy(value))}
+            />
           </div>
           <div className="text-sm text-muted-foreground">
             {hasActiveFilters && (

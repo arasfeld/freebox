@@ -11,7 +11,7 @@ export const CATEGORIES = [
 
 export const ITEM_STATUS_COLORS = {
   AVAILABLE: 'bg-green-100 text-green-800',
-  RESERVED: 'bg-yellow-100 text-yellow-800',
+  PENDING: 'bg-yellow-100 text-yellow-800',
   TAKEN: 'bg-gray-100 text-gray-800',
 } as const;
 
@@ -40,6 +40,20 @@ export interface SearchFilters {
 
 export type Category = (typeof CATEGORIES)[number];
 export type ItemStatus = keyof typeof ITEM_STATUS_COLORS;
+
+export interface InterestEntry {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userImage?: string;
+  timestamp: string;
+  userStats: {
+    totalItemsReceived: number;
+    totalItemsGiven: number;
+    averageResponseTime: number; // in hours
+    lastActivity: string;
+  };
+}
 export type Location = (typeof LOCATIONS)[number];
 export type SortOption =
   | 'category'
