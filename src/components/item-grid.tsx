@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { useSearch } from '@/hooks/use-search';
 
+import { ITEM_STATUS_COLORS } from '@/types/search';
+import type { ItemStatus } from '@/types/search';
+
 interface Item {
   id: string;
   title: string;
@@ -18,7 +21,7 @@ interface Item {
   images: string[];
   category?: string;
   location?: string;
-  status: 'AVAILABLE' | 'RESERVED' | 'TAKEN';
+  status: ItemStatus;
   createdAt: string;
   user: {
     id: string;
@@ -32,11 +35,12 @@ export function ItemGrid() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { filters } = useSearch();
+  const { filters, sortBy, isSearching, setIsSearching } = useSearch();
 
   const fetchItems = useCallback(async () => {
     try {
       setLoading(true);
+      setIsSearching(true);
       const params = new URLSearchParams();
 
       if (filters.search) {
@@ -63,8 +67,9 @@ export function ItemGrid() {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+      setIsSearching(false);
     }
-  }, [filters]);
+  }, [filters, setIsSearching]);
 
   // Debounce the API call to avoid too many requests
   useEffect(() => {
@@ -75,34 +80,70 @@ export function ItemGrid() {
     return () => clearTimeout(timer);
   }, [fetchItems]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'AVAILABLE':
-        return 'bg-green-100 text-green-800';
-      case 'RESERVED':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'TAKEN':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const getStatusColor = useCallback((status: string) => {
+    return (
+      ITEM_STATUS_COLORS[status as keyof typeof ITEM_STATUS_COLORS] ||
+      ITEM_STATUS_COLORS.TAKEN
+    );
+  }, []);
+
+  const sortItems = useCallback(
+    (itemsToSort: Item[]): Item[] => {
+      const sortedItems = [...itemsToSort];
+
+      switch (sortBy) {
+        case 'newest':
+          return sortedItems.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        case 'oldest':
+          return sortedItems.sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+        case 'title':
+          return sortedItems.sort((a, b) => a.title.localeCompare(b.title));
+        case 'category':
+          return sortedItems.sort((a, b) =>
+            (a.category || '').localeCompare(b.category || '')
+          );
+        case 'location':
+          return sortedItems.sort((a, b) =>
+            (a.location || '').localeCompare(b.location || '')
+          );
+        default:
+          return sortedItems;
+      }
+    },
+    [sortBy]
+  );
+
+  const sortedItems = useMemo(() => sortItems(items), [sortItems, items]);
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-32 bg-gray-200 rounded mb-4"></div>
-              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+          <span className="text-sm text-muted-foreground">
+            Loading items...
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-32 bg-gray-200 rounded mb-4"></div>
+                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -151,15 +192,24 @@ export function ItemGrid() {
 
   return (
     <>
-      {!loading && (
-        <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <p className="text-sm text-muted-foreground">
-            {items.length} item{items.length !== 1 ? 's' : ''} found
+            {sortedItems.length} item{sortedItems.length !== 1 ? 's' : ''} found
+            {sortBy !== 'newest' && ` • Sorted by ${sortBy}`}
           </p>
+          {isSearching && (
+            <>
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+              <span className="text-sm text-muted-foreground">
+                Searching...
+              </span>
+            </>
+          )}
         </div>
-      )}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <Card key={item.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">

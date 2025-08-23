@@ -1,20 +1,26 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 
-interface SearchFilters {
-  search: string;
-  category: string;
-  location: string;
-}
+import type { SearchFilters, SortOption } from '@/types/search';
 
 interface SearchContextType {
   filters: SearchFilters;
+  sortBy: SortOption;
   setSearch: (search: string) => void;
   setCategory: (category: string) => void;
   setLocation: (location: string) => void;
+  setSortBy: (sortBy: SortOption) => void;
   clearFilters: () => void;
   hasActiveFilters: boolean;
+  isSearching: boolean;
+  setIsSearching: (searching: boolean) => void;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
@@ -25,6 +31,8 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     category: 'all',
     location: 'all',
   });
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [isSearching, setIsSearching] = useState(false);
 
   const setSearch = useCallback((search: string) => {
     setFilters((prev) => ({ ...prev, search }));
@@ -38,6 +46,10 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     setFilters((prev) => ({ ...prev, location }));
   }, []);
 
+  const setSortByCallback = useCallback((sortBy: SortOption) => {
+    setSortBy(sortBy);
+  }, []);
+
   const clearFilters = useCallback(() => {
     setFilters({
       search: '',
@@ -46,20 +58,27 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const hasActiveFilters =
-    filters.search !== '' ||
-    filters.category !== 'all' ||
-    filters.location !== 'all';
+  const hasActiveFilters = useMemo(
+    () =>
+      filters.search !== '' ||
+      filters.category !== 'all' ||
+      filters.location !== 'all',
+    [filters.search, filters.category, filters.location]
+  );
 
   return (
     <SearchContext.Provider
       value={{
         filters,
+        sortBy,
         setSearch,
         setCategory,
         setLocation,
+        setSortBy: setSortByCallback,
         clearFilters,
         hasActiveFilters,
+        isSearching,
+        setIsSearching,
       }}
     >
       {children}

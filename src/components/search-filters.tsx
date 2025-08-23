@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Search } from 'lucide-react';
-
-import { useSearch } from '@/hooks/use-search';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,48 +13,58 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SortOptions } from '@/components/sort-options';
 
-const categories = [
-  'Furniture',
-  'Electronics',
-  'Clothing',
-  'Books',
-  'Sports',
-  'Home & Garden',
-  'Toys & Games',
-  'Other',
-];
+import { useSearch } from '@/hooks/use-search';
 
-const locations = [
-  'Downtown',
-  'North Side',
-  'South Side',
-  'East Side',
-  'West Side',
-  'Suburbs',
-];
+import { CATEGORIES, LOCATIONS } from '@/types/search';
 
 export function SearchFilters() {
   const {
     filters,
+    sortBy,
     setSearch,
     setCategory,
     setLocation,
+    setSortBy,
     clearFilters,
     hasActiveFilters,
   } = useSearch();
 
   // Keyboard shortcut to clear filters (Escape key)
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
       if (event.key === 'Escape' && hasActiveFilters) {
         clearFilters();
       }
-    };
+    },
+    [clearFilters, hasActiveFilters]
+  );
 
+  useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [clearFilters, hasActiveFilters]);
+  }, [handleKeyDown]);
+
+  const categoryOptions = useMemo(
+    () =>
+      CATEGORIES.map((category) => (
+        <SelectItem key={category} value={category}>
+          {category}
+        </SelectItem>
+      )),
+    []
+  );
+
+  const locationOptions = useMemo(
+    () =>
+      LOCATIONS.map((location) => (
+        <SelectItem key={location} value={location}>
+          {location}
+        </SelectItem>
+      )),
+    []
+  );
 
   return (
     <Card>
@@ -78,11 +86,7 @@ export function SearchFilters() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
+              {categoryOptions}
             </SelectContent>
           </Select>
 
@@ -92,23 +96,22 @@ export function SearchFilters() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
-              {locations.map((loc) => (
-                <SelectItem key={loc} value={loc}>
-                  {loc}
-                </SelectItem>
-              ))}
+              {locationOptions}
             </SelectContent>
           </Select>
         </div>
 
         <div className="flex justify-between items-center mt-4">
-          <Button
-            variant="outline"
-            onClick={clearFilters}
-            disabled={!hasActiveFilters}
-          >
-            Clear Filters
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+            >
+              Clear Filters
+            </Button>
+            <SortOptions value={sortBy} onValueChange={setSortBy} />
+          </div>
           <div className="text-sm text-muted-foreground">
             {hasActiveFilters && (
               <span>
