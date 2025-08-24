@@ -1,22 +1,40 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Quick Start
+
+1. **Clone and install dependencies:**
+
+   ```bash
+   git clone <your-repo-url>
+   cd freebox
+   npm install
+   ```
+
+2. **Set up environment variables:**
+
+   ```bash
+   cp .env.example .env
+   # Edit .env with your credentials
+   ```
+
+3. **Set up the database:**
+
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   ```
+
+4. **Start the development server:**
+
+   ```bash
+   npm run dev
+   ```
+
+5. **Open [http://localhost:3000](http://localhost:3000)** with your browser to see the result.
+
 ## Getting Started
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+For detailed setup instructions, see the sections below.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
@@ -41,19 +59,32 @@ Generate a secure secret key for NextAuth.js:
 openssl rand -base64 32
 ```
 
-### 3. Update Environment Variables
+### 3. Set up Environment Variables
 
-Update your `.env` file with your Google OAuth credentials:
+1. Copy the example environment file:
 
-```env
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-generated-secret-key-here"
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-DATABASE_URL="your-prisma-postgres-database-url"
-```
+   ```bash
+   cp .env.example .env
+   ```
 
-### 4. Set up Database
+2. Update your `.env` file with your actual credentials:
+   - Generate a secure NEXTAUTH_SECRET: `openssl rand -base64 32`
+   - Add your Google OAuth credentials
+   - Add your Cloudinary credentials
+   - Add your PostgreSQL database URL
+
+See `.env.example` for detailed descriptions of each variable.
+
+### 4. Set up Cloudinary (for Image Uploads)
+
+1. Create a free account at [cloudinary.com](https://cloudinary.com)
+2. Go to your Dashboard and copy your credentials:
+   - Cloud Name
+   - API Key
+   - API Secret
+3. Add these to your `.env` file (see step 3 above)
+
+### 5. Set up Database
 
 The project uses Prisma PostgreSQL for user data persistence:
 
@@ -68,7 +99,7 @@ npx prisma generate --no-engine
 npx prisma migrate dev
 ```
 
-### 5. Test Authentication
+### 6. Test Authentication
 
 Once configured, you can:
 
@@ -76,10 +107,22 @@ Once configured, you can:
 - See your profile picture and email when signed in
 - Sign out using the dropdown menu
 
+### 7. Test Image Upload
+
+Once Cloudinary is configured:
+
+- Go to "Post an Item" page
+- Drag and drop images or click to select files
+- Images will be automatically uploaded and optimized
+- View uploaded images in the item grid and detail pages
+
 ## Features
 
 - **Dark Mode** - Toggle between light, dark, and system themes
 - **Authentication** - Google OAuth sign-in with NextAuth.js and Prisma PostgreSQL
+- **Image Upload** - Drag-and-drop image uploads with Cloudinary optimization
+- **Item Management** - Create, edit, and delete items with images
+- **Interest System** - Express interest in items and manage recipients
 - **UI Components** - Built with shadcn/ui
 - **Responsive Design** - Works on all screen sizes
 

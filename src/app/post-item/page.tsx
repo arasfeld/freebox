@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 import LoginBtn from '@/components/login-btn';
 import { ModeToggle } from '@/components/mode-toggle';
+import { ImageUpload } from '@/components/image-upload';
 
 const categories = [
   'Furniture',
@@ -95,7 +95,7 @@ export default function PostItemPage() {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | string[]) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -245,15 +245,14 @@ export default function PostItemPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Images (Coming Soon)</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <p className="text-muted-foreground">
-                      Image upload functionality will be added soon!
-                    </p>
-                    <Badge variant="outline" className="mt-2">
-                      Feature Coming Soon
-                    </Badge>
-                  </div>
+                  <Label>Images</Label>
+                  <ImageUpload
+                    images={formData.images}
+                    onImagesChange={(images) =>
+                      handleInputChange('images', images)
+                    }
+                    maxImages={5}
+                  />
                 </div>
 
                 {error && (

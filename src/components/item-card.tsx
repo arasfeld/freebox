@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+import { ImageModal } from '@/components/image-modal';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +33,7 @@ export function ItemCard({ item, onStatusChange }: ItemCardProps) {
   const [localHasExpressedInterest, setLocalHasExpressedInterest] = useState(
     item.hasExpressedInterest || false
   );
+  const [imageModalOpen, setImageModalOpen] = useState(false);
 
   const getStatusColor = useCallback((status: string) => {
     return (
@@ -95,13 +98,21 @@ export function ItemCard({ item, onStatusChange }: ItemCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {item.images.length > 0 && (
-          <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden">
+          <div
+            className="relative h-48 bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => setImageModalOpen(true)}
+          >
             <Image
               src={item.images[0]}
               alt={item.title}
               fill
               className="object-cover"
             />
+            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
+              <div className="opacity-0 hover:opacity-100 transition-opacity text-white bg-black/50 px-2 py-1 rounded text-xs">
+                Click to view
+              </div>
+            </div>
           </div>
         )}
 
@@ -173,6 +184,13 @@ export function ItemCard({ item, onStatusChange }: ItemCardProps) {
           </div>
         </div>
       </CardContent>
+
+      {/* Image Modal */}
+      <ImageModal
+        images={item.images}
+        isOpen={imageModalOpen}
+        onClose={() => setImageModalOpen(false)}
+      />
     </Card>
   );
 }

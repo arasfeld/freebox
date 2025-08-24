@@ -6,166 +6,214 @@ const testUsers = [
   {
     name: 'Adam Rasfeld',
     email: 'arasfeld@gmail.com',
-    image:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    image: null,
   },
   {
     name: 'Alice Johnson',
     email: 'alice@example.com',
-    image:
-      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+    image: null,
   },
   {
     name: 'Bob Smith',
     email: 'bob@example.com',
-    image:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    image: null,
   },
   {
     name: 'Carol Davis',
     email: 'carol@example.com',
-    image:
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+    image: null,
   },
   {
     name: 'David Wilson',
     email: 'david@example.com',
-    image:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    image: null,
   },
   {
     name: 'Emma Brown',
     email: 'emma@example.com',
-    image:
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
+    image: null,
   },
 ];
 
 const testItems = [
   {
-    title: 'Vintage Coffee Table',
+    title: '32" Samsung Smart TV',
     description:
-      'Beautiful wooden coffee table with intricate carvings. Perfect condition, just needs a new home.',
-    category: 'Furniture',
+      'Excellent condition Samsung Smart TV, 32 inches. Perfect for a bedroom or small living room. Comes with remote and power cable. Upgraded to a larger TV, so this one needs a new home.',
+    category: 'Electronics',
     location: 'Downtown',
     images: [
-      'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop',
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059340/tv_w32ae1.jpg',
     ],
   },
   {
-    title: 'MacBook Pro 2019',
+    title: 'Wooden Train Set - Complete Collection',
     description:
-      '13-inch MacBook Pro in excellent condition. Comes with charger and case. Upgraded to a newer model.',
-    category: 'Electronics',
-    location: 'East Side',
-    images: [
-      'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=300&fit=crop',
-    ],
-  },
-  {
-    title: 'Bicycle - Mountain Bike',
-    description:
-      'Trek mountain bike, great for trails. Recently serviced, new tires. Perfect for someone who loves outdoor adventures.',
-    category: 'Sports',
+      'Beautiful wooden train set with tracks, bridges, and multiple train cars. Great condition, perfect for kids aged 3-8. All pieces included and in excellent shape.',
+    category: 'Toys & Games',
     location: 'North Side',
     images: [
-      'https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=400&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1544191696-102dbdaeeaa5?w=400&h=300&fit=crop',
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059340/train-toy_emsynw.jpg',
     ],
   },
   {
-    title: 'Book Collection - Fantasy Novels',
+    title: 'Professional Soccer Ball',
     description:
-      'Complete collection of fantasy novels including Lord of the Rings, Game of Thrones, and more. All in great condition.',
-    category: 'Books',
-    location: 'West Side',
-    images: [
-      'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop',
-    ],
-  },
-  {
-    title: 'Garden Tools Set',
-    description:
-      'Complete set of garden tools including shovel, rake, hoe, and watering can. Perfect for starting a garden.',
-    category: 'Home & Garden',
-    location: 'Suburbs',
-    images: [
-      'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop',
-    ],
-  },
-  {
-    title: 'Board Games Collection',
-    description:
-      'Collection of popular board games: Monopoly, Scrabble, Chess, and more. Great for family game nights.',
-    category: 'Toys & Games',
+      'High-quality soccer ball, size 5. Used for a few games but still in great condition. Perfect for practice or casual games. No punctures or damage.',
+    category: 'Sports',
     location: 'South Side',
     images: [
-      'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=400&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1611996575749-79a3a250f948?w=400&h=300&fit=crop',
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059340/soccer-ball_jbyygm.jpg',
     ],
   },
   {
-    title: 'Winter Jacket - Large',
+    title: 'Nike Running Shoes - Size 10',
     description:
-      'Warm winter jacket, size large. Barely worn, perfect for cold weather. Dark blue color.',
+      'Comfortable Nike running shoes, size 10. Lightly used, still have plenty of life left. Great for jogging or casual wear. Clean and well-maintained.',
+    category: 'Clothing',
+    location: 'East Side',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059339/shoes_j4mq7c.jpg',
+    ],
+  },
+  {
+    title: 'Solid Wood Dining Table',
+    description:
+      'Beautiful solid wood dining table, seats 6 people comfortably. Sturdy construction, perfect for family meals. Some minor wear but overall excellent condition.',
+    category: 'Furniture',
+    location: 'West Side',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059339/table_etgyd7.jpg',
+    ],
+  },
+  {
+    title: 'Cotton T-Shirt Collection',
+    description:
+      'Collection of 5 cotton t-shirts in various colors and sizes. All in good condition, perfect for everyday wear. Mix of casual and graphic tees.',
     category: 'Clothing',
     location: 'Downtown',
     images: [
-      'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=300&fit=crop',
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059339/tshirt_mlxvez.jpg',
     ],
   },
   {
-    title: 'Kitchen Appliances',
+    title: 'iPhone 12 - 128GB',
     description:
-      'Various kitchen appliances: blender, toaster, coffee maker. All working perfectly, just upgraded to newer models.',
-    category: 'Home & Garden',
-    location: 'East Side',
+      'iPhone 12 in excellent condition, 128GB storage. Comes with original charger and case. Screen protector included. Upgraded to newer model.',
+    category: 'Electronics',
+    location: 'Suburbs',
     images: [
-      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059339/phone_kciixe.jpg',
     ],
   },
   {
-    title: 'Guitar - Acoustic',
+    title: 'Original Oil Painting - Landscape',
     description:
-      'Beautiful acoustic guitar, great sound. Perfect for beginners or intermediate players. Comes with case.',
+      'Beautiful original oil painting of a mountain landscape. Hand-painted, signed by the artist. Perfect for home decoration. Frame included.',
     category: 'Other',
     location: 'North Side',
     images: [
-      'https://images.unsplash.com/photo-1525201548942-d8732f6617a0?w=400&h=300&fit=crop',
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/painting_ddrjby.jpg',
     ],
   },
   {
-    title: 'Office Chair - Ergonomic',
+    title: 'Dell Laptop - Windows 10',
     description:
-      'High-quality ergonomic office chair. Very comfortable, adjustable height and backrest. Great for home office.',
+      'Dell Inspiron laptop, 15.6 inch screen, 8GB RAM, 256GB SSD. Runs Windows 10 smoothly. Perfect for work or school. Comes with charger.',
+    category: 'Electronics',
+    location: 'East Side',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/laptop_dfqwpi.jpg',
+    ],
+  },
+  {
+    title: 'Complete Garden Tool Set',
+    description:
+      'Professional garden tool set including shovel, rake, hoe, pruning shears, and watering can. All tools in excellent condition. Perfect for maintaining a garden.',
+    category: 'Home & Garden',
+    location: 'Suburbs',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/garden-tools_ymtyum.jpg',
+    ],
+  },
+  {
+    title: 'Comfortable Living Room Couch',
+    description:
+      'Large, comfortable couch perfect for a living room. Neutral color, fabric upholstery. Great condition, no stains or tears. Seats 3-4 people comfortably.',
     category: 'Furniture',
     location: 'West Side',
     images: [
-      'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=400&h=300&fit=crop',
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/couch_vgylsy.jpg',
     ],
   },
   {
-    title: 'Yoga Mat and Props',
+    title: 'Gas-Powered Lawn Mower',
     description:
-      'Complete yoga set including mat, blocks, strap, and meditation cushion. Perfect for home practice.',
-    category: 'Sports',
-    location: 'Suburbs',
-    images: [
-      'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop',
-    ],
-  },
-  {
-    title: "Children's Books",
-    description:
-      "Large collection of children's books for ages 3-10. Great condition, perfect for families with young kids.",
-    category: 'Books',
+      'Reliable gas-powered lawn mower, self-propelled. Well-maintained, starts easily. Perfect for medium to large yards. Recently serviced and ready to use.',
+    category: 'Home & Garden',
     location: 'South Side',
     images: [
-      'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/lawnmower_rmtk4x.jpg',
+    ],
+  },
+  {
+    title: 'Classic Novel Collection',
+    description:
+      'Collection of classic novels including "Pride and Prejudice", "1984", "The Great Gatsby", and more. All hardcover editions in excellent condition.',
+    category: 'Books',
+    location: 'Downtown',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/book_ehyms8.jpg',
+    ],
+  },
+  {
+    title: 'Educational Books for Children',
+    description:
+      "Large collection of educational children's books for ages 5-12. Mix of fiction and non-fiction. Great for homeschooling or supplementing school learning.",
+    category: 'Books',
+    location: 'North Side',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/books_yjqeh0.jpg',
+    ],
+  },
+  {
+    title: 'Family Board Games Collection',
+    description:
+      'Complete collection of family board games including Monopoly, Scrabble, Clue, and more. All games have all pieces and instructions. Perfect for family game nights.',
+    category: 'Toys & Games',
+    location: 'East Side',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/board-games_lmlfmh.jpg',
+    ],
+  },
+  {
+    title: 'Building Blocks Set',
+    description:
+      'Large set of colorful building blocks for creative play. Compatible with major brands. Great for developing motor skills and creativity. All pieces included.',
+    category: 'Toys & Games',
+    location: 'Suburbs',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/blocks-toy_c5ybnd.jpg',
+    ],
+  },
+  {
+    title: 'Acoustic Guitar - Yamaha',
+    description:
+      'Beautiful Yamaha acoustic guitar with rich sound. Perfect for beginners or intermediate players. Comes with case, tuner, and extra strings. Well-maintained.',
+    category: 'Other',
+    location: 'West Side',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/acoustic-guitar_m9m9b5.jpg',
+    ],
+  },
+  {
+    title: 'Mountain Bike - Trek',
+    description:
+      'Trek mountain bike in excellent condition. 21-speed, perfect for trails and city riding. Recently serviced with new tires and brakes. Helmet included.',
+    category: 'Sports',
+    location: 'South Side',
+    images: [
+      'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/bike_no6d4l.jpg',
     ],
   },
 ];
@@ -283,7 +331,7 @@ async function main() {
     if (existingAdamItems.length > 0) {
       console.log(`Found ${existingAdamItems.length} items for Adam`);
 
-      // Add interests to the first item (Vintage Coffee Table)
+      // Add interests to the first item (Samsung TV)
       const targetItem = existingAdamItems[0];
 
       if (targetItem.interests.length === 0) {

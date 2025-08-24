@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 
+import { ImageModal } from '@/components/image-modal';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -74,6 +76,8 @@ export default function ItemDetailPage() {
   const [editLoading, setEditLoading] = useState(false);
   const [localHasExpressedInterest, setLocalHasExpressedInterest] =
     useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const [expressInterest, { isLoading: isExpressingInterest }] =
     useExpressInterestMutation();
@@ -346,13 +350,51 @@ export default function ItemDetailPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* Item Images */}
               {item.images.length > 0 ? (
-                <div className="relative h-96 bg-gray-100 rounded-lg overflow-hidden">
-                  <Image
-                    src={item.images[0]}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                  />
+                <div className="space-y-4">
+                  {/* Main Image */}
+                  <div
+                    className="relative h-96 bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => {
+                      setSelectedImageIndex(0);
+                      setImageModalOpen(true);
+                    }}
+                  >
+                    <Image
+                      src={item.images[0]}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <div className="opacity-0 hover:opacity-100 transition-opacity text-white bg-black/50 px-3 py-1 rounded-full text-sm">
+                        Click to view full size
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Thumbnail Gallery */}
+                  {item.images.length > 1 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {item.images.slice(1).map((image, index) => (
+                        <div
+                          key={index + 1}
+                          className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => {
+                            setSelectedImageIndex(index + 1);
+                            setImageModalOpen(true);
+                          }}
+                        >
+                          <Image
+                            src={image}
+                            alt={`${item.title} - Image ${index + 2}`}
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -689,6 +731,14 @@ export default function ItemDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Image Modal */}
+      <ImageModal
+        images={item.images}
+        initialIndex={selectedImageIndex}
+        isOpen={imageModalOpen}
+        onClose={() => setImageModalOpen(false)}
+      />
     </div>
   );
 }
