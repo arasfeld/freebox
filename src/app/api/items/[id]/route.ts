@@ -11,6 +11,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const session = await getServerSession(authOptions);
+
     const item = await prisma.item.findUnique({
       where: { id },
       include: {
@@ -22,6 +24,18 @@ export async function GET(
             image: true,
           },
         },
+        interests: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -29,7 +43,20 @@ export async function GET(
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
 
-    return NextResponse.json(item);
+    // Calculate isOwner and hasExpressedInterest
+    const isOwner = session?.user?.id === item.userId;
+    const hasExpressedInterest = session?.user?.id
+      ? item.interests.some((interest) => interest.userId === session.user.id)
+      : false;
+
+    // Add computed fields to the response
+    const itemWithComputedFields = {
+      ...item,
+      isOwner,
+      hasExpressedInterest,
+    };
+
+    return NextResponse.json(itemWithComputedFields);
   } catch (error) {
     console.error('Error fetching item:', error);
     return NextResponse.json(

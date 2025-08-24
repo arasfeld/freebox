@@ -36,6 +36,7 @@ export interface SearchFilters {
   category: string;
   location: string;
   search: string;
+  status: string;
 }
 
 export type Category = (typeof CATEGORIES)[number];
@@ -43,15 +44,19 @@ export type ItemStatus = keyof typeof ITEM_STATUS_COLORS;
 
 export interface InterestEntry {
   userId: string;
-  userName: string;
-  userEmail: string;
-  userImage?: string;
   timestamp: string;
+  selected?: boolean;
   userStats: {
     totalItemsReceived: number;
     totalItemsGiven: number;
     averageResponseTime: number; // in hours
     lastActivity: string;
+  };
+  user: {
+    id: string;
+    name?: string;
+    email?: string;
+    image?: string;
   };
 }
 export type Location = (typeof LOCATIONS)[number];

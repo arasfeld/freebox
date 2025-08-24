@@ -26,7 +26,8 @@ export const selectHasActiveFilters = createSelector(
   (filters) =>
     filters.search !== '' ||
     filters.category !== 'all' ||
-    filters.location !== 'all'
+    filters.location !== 'all' ||
+    filters.status !== 'all'
 );
 
 export const selectSearchQuery = createSelector(
@@ -44,6 +45,11 @@ export const selectLocationFilter = createSelector(
   (filters) => filters.location
 );
 
+export const selectStatusFilter = createSelector(
+  [selectSearchFilters],
+  (filters) => filters.status
+);
+
 // Combined selectors
 export const selectSearchStateSummary = createSelector(
   [selectSearchFilters, selectSortBy, selectHasActiveFilters],
@@ -54,5 +60,6 @@ export const selectSearchStateSummary = createSelector(
     searchQuery: filters.search,
     categoryFilter: filters.category,
     locationFilter: filters.location,
+    statusFilter: filters.status,
   })
 );

@@ -26,6 +26,7 @@ export interface GetItemsParams {
   search?: string;
   category?: string;
   location?: string;
+  status?: string;
 }
 
 interface ExpressInterestParams {
@@ -54,6 +55,9 @@ export const itemsApi = createApi({
         }
         if (params.location && params.location !== 'all') {
           searchParams.append('location', params.location);
+        }
+        if (params.status && params.status !== 'all') {
+          searchParams.append('status', params.status);
         }
 
         return {
@@ -94,11 +98,10 @@ export const itemsApi = createApi({
       },
       invalidatesTags: ['Items'],
     }),
-    selectRecipient: builder.mutation<Item, SelectRecipientParams>({
-      query: ({ itemId, recipientUserId }) => ({
-        url: `items/${itemId}/select-recipient`,
-        method: 'POST',
-        body: { recipientUserId },
+    removeInterest: builder.mutation<void, ExpressInterestParams>({
+      query: ({ itemId }) => ({
+        url: `items/${itemId}/interest`,
+        method: 'DELETE',
       }),
       // Optimistic update
       async onQueryStarted({ itemId }, { dispatch, queryFulfilled }) {
@@ -106,7 +109,7 @@ export const itemsApi = createApi({
           itemsApi.util.updateQueryData('getItems', {}, (draft) => {
             const item = draft.find((item) => item.id === itemId);
             if (item) {
-              item.status = 'TAKEN';
+              item.hasExpressedInterest = false;
             }
           })
         );
@@ -119,6 +122,58 @@ export const itemsApi = createApi({
       },
       invalidatesTags: ['Items'],
     }),
+    selectRecipient: builder.mutation<
+      { message: string; recipientUserId: string; item: Item },
+      SelectRecipientParams
+    >({
+      query: ({ itemId, recipientUserId }) => ({
+        url: `items/${itemId}/select-recipient`,
+        method: 'POST',
+        body: { recipientUserId },
+      }),
+      // Optimistic update
+      async onQueryStarted(
+        { itemId, recipientUserId },
+        { dispatch, queryFulfilled }
+      ) {
+        const patchResult = dispatch(
+          itemsApi.util.updateQueryData('getItems', {}, (draft) => {
+            const item = draft.find((item) => item.id === itemId);
+            if (item) {
+              item.status = 'TAKEN';
+              // Update the selected interest
+              if (item.interests) {
+                item.interests.forEach((interest) => {
+                  interest.selected = interest.userId === recipientUserId;
+                });
+              }
+            }
+          })
+        );
+
+        // Also update the individual item query
+        const itemPatchResult = dispatch(
+          itemsApi.util.updateQueryData('getItem', itemId, (draft) => {
+            if (draft) {
+              draft.status = 'TAKEN';
+              if (draft.interests) {
+                draft.interests.forEach((interest) => {
+                  interest.selected = interest.userId === recipientUserId;
+                });
+              }
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+          itemPatchResult.undo();
+        }
+      },
+      invalidatesTags: ['Items'],
+    }),
   }),
 });
 
@@ -126,5 +181,6 @@ export const {
   useGetItemsQuery,
   useGetItemQuery,
   useExpressInterestMutation,
+  useRemoveInterestMutation,
   useSelectRecipientMutation,
 } = itemsApi;

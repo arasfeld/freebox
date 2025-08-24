@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
@@ -30,23 +30,15 @@ import { Textarea } from '@/components/ui/textarea';
 
 import LoginBtn from '@/components/login-btn';
 import { ModeToggle } from '@/components/mode-toggle';
+import { InterestManagement } from '@/components/interest-management';
 
-interface Item {
-  id: string;
-  title: string;
-  description?: string;
-  images: string[];
-  category?: string;
-  location?: string;
-  status: 'AVAILABLE' | 'RESERVED' | 'TAKEN';
-  createdAt: string;
-  user: {
-    id: string;
-    name?: string;
-    email?: string;
-    image?: string;
-  };
-}
+import {
+  useExpressInterestMutation,
+  useRemoveInterestMutation,
+} from '@/lib/features/items/itemsApi';
+import { toast } from 'sonner';
+
+import type { Item } from '@/lib/features/items/itemsApi';
 
 const categories = [
   'Furniture',
@@ -80,13 +72,20 @@ export default function ItemDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [localHasExpressedInterest, setLocalHasExpressedInterest] =
+    useState(false);
+
+  const [expressInterest, { isLoading: isExpressingInterest }] =
+    useExpressInterestMutation();
+  const [removeInterest, { isLoading: isRemovingInterest }] =
+    useRemoveInterestMutation();
 
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
     category: '',
     location: '',
-    status: 'AVAILABLE' as 'AVAILABLE' | 'RESERVED' | 'TAKEN',
+    status: 'AVAILABLE' as 'AVAILABLE' | 'PENDING' | 'TAKEN',
   });
 
   useEffect(() => {
@@ -104,6 +103,7 @@ export default function ItemDetailPage() {
       }
       const data = await response.json();
       setItem(data);
+      setLocalHasExpressedInterest(data.hasExpressedInterest || false);
       setEditForm({
         title: data.title,
         description: data.description || '',
@@ -190,7 +190,7 @@ export default function ItemDetailPage() {
     switch (status) {
       case 'AVAILABLE':
         return 'bg-green-100 text-green-800';
-      case 'RESERVED':
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
       case 'TAKEN':
         return 'bg-gray-100 text-gray-800';
@@ -206,6 +206,54 @@ export default function ItemDetailPage() {
       day: 'numeric',
     });
   };
+
+  const handleUndoInterest = useCallback(async () => {
+    if (!item) return;
+
+    try {
+      await removeInterest({ itemId: item.id }).unwrap();
+      setLocalHasExpressedInterest(false);
+      setItem((prev) =>
+        prev
+          ? { ...prev, status: 'AVAILABLE', hasExpressedInterest: false }
+          : null
+      );
+      toast.success('Interest removed', {
+        description: 'Your interest has been removed from this item.',
+      });
+    } catch (error) {
+      console.error('Failed to remove interest:', error);
+      toast.error('Failed to remove interest', {
+        description: 'Please try again later.',
+      });
+    }
+  }, [removeInterest, item]);
+
+  const handleExpressInterest = useCallback(async () => {
+    if (!item) return;
+
+    try {
+      await expressInterest({ itemId: item.id }).unwrap();
+      setLocalHasExpressedInterest(true);
+      setItem((prev) =>
+        prev ? { ...prev, status: 'PENDING', hasExpressedInterest: true } : null
+      );
+
+      toast.success('Interest expressed successfully!', {
+        description: 'The item owner will be notified of your interest.',
+        action: {
+          label: 'Undo',
+          onClick: () => handleUndoInterest(),
+        },
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error('Failed to express interest:', error);
+      toast.error('Failed to express interest', {
+        description: 'Please try again later.',
+      });
+    }
+  }, [expressInterest, handleUndoInterest, item]);
 
   if (loading) {
     return (
@@ -359,6 +407,11 @@ export default function ItemDetailPage() {
                 </CardContent>
               </Card>
 
+              {/* Interest Management */}
+              {isOwner && item.interests && item.interests.length > 0 && (
+                <InterestManagement item={item} />
+              )}
+
               {/* Edit Form */}
               {isOwner && isEditing && (
                 <Card>
@@ -442,7 +495,7 @@ export default function ItemDetailPage() {
                         <Select
                           value={editForm.status}
                           onValueChange={(
-                            value: 'AVAILABLE' | 'RESERVED' | 'TAKEN'
+                            value: 'AVAILABLE' | 'PENDING' | 'TAKEN'
                           ) => setEditForm({ ...editForm, status: value })}
                         >
                           <SelectTrigger>
@@ -450,7 +503,7 @@ export default function ItemDetailPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="AVAILABLE">Available</SelectItem>
-                            <SelectItem value="RESERVED">Reserved</SelectItem>
+                            <SelectItem value="PENDING">Pending</SelectItem>
                             <SelectItem value="TAKEN">Taken</SelectItem>
                           </SelectContent>
                         </Select>
@@ -539,9 +592,39 @@ export default function ItemDetailPage() {
                     </>
                   ) : (
                     <>
-                      {item.status === 'AVAILABLE' && (
-                        <Button className="w-full">Contact Owner</Button>
-                      )}
+                      {item.status === 'AVAILABLE' &&
+                        !item.hasExpressedInterest &&
+                        !localHasExpressedInterest && (
+                          <Button
+                            className="w-full"
+                            onClick={handleExpressInterest}
+                            disabled={isExpressingInterest}
+                          >
+                            {isExpressingInterest
+                              ? 'Expressing...'
+                              : "I'm Interested"}
+                          </Button>
+                        )}
+                      {item.hasExpressedInterest ||
+                      localHasExpressedInterest ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-center p-2 bg-green-50 border border-green-200 rounded-lg">
+                            <span className="text-green-600 text-sm font-medium">
+                              Interest Expressed ✓
+                            </span>
+                          </div>
+                          <Button
+                            className="w-full"
+                            variant="outline"
+                            onClick={handleUndoInterest}
+                            disabled={isRemovingInterest}
+                          >
+                            {isRemovingInterest
+                              ? 'Removing...'
+                              : 'Remove Interest'}
+                          </Button>
+                        </div>
+                      ) : null}
                       <Button className="w-full" variant="outline">
                         Report Item
                       </Button>

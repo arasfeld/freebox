@@ -20,6 +20,7 @@ import {
   setCategory,
   setLocation,
   setSearch,
+  setStatus,
   setSortBy,
 } from '@/lib/features/search/searchSlice';
 import {
@@ -30,6 +31,13 @@ import {
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 
 import { CATEGORIES, LOCATIONS } from '@/types/search';
+
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'All Status' },
+  { value: 'AVAILABLE', label: 'Available' },
+  { value: 'PENDING', label: 'Pending Interest' },
+  { value: 'TAKEN', label: 'Taken' },
+];
 
 export function SearchFilters() {
   const dispatch = useAppDispatch();
@@ -109,6 +117,22 @@ export function SearchFilters() {
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
               {locationOptions}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.status}
+            onValueChange={(value) => dispatch(setStatus(value))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

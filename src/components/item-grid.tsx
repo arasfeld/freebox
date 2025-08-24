@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ItemCard } from '@/components/item-card';
 
-import { useSearchWithItems } from '@/lib/features/search/useSearchWithItems';
+import { useSearch } from '@/lib/features/search/useSearch';
 
 import type { Item } from '@/lib/features/items/itemsApi';
 
@@ -19,7 +19,7 @@ export function ItemGrid() {
     error,
     sortBy,
     hasActiveFilters,
-  } = useSearchWithItems();
+  } = useSearch();
 
   const sortItems = useCallback(
     (itemsToSort: Item[]): Item[] => {

@@ -13,6 +13,7 @@ const initialState: SearchState = {
     search: '',
     category: 'all',
     location: 'all',
+    status: 'all',
   },
   sortBy: 'newest',
   isSearching: false,
@@ -27,6 +28,7 @@ export const searchSlice = createSlice({
         search: '',
         category: 'all',
         location: 'all',
+        status: 'all',
       };
     },
     setCategory: (state, action: PayloadAction<string>) => {
@@ -41,6 +43,9 @@ export const searchSlice = createSlice({
     setSearch: (state, action: PayloadAction<string>) => {
       state.filters.search = action.payload;
     },
+    setStatus: (state, action: PayloadAction<string>) => {
+      state.filters.status = action.payload;
+    },
     setSortBy: (state, action: PayloadAction<SortOption>) => {
       state.sortBy = action.payload;
     },
@@ -53,6 +58,7 @@ export const {
   setIsSearching,
   setLocation,
   setSearch,
+  setStatus,
   setSortBy,
 } = searchSlice.actions;
 

@@ -52,13 +52,12 @@ export async function GET(request: NextRequest) {
 
     if (
       status &&
+      status !== 'all' &&
       (status === 'AVAILABLE' || status === 'PENDING' || status === 'TAKEN')
     ) {
       where.status = status as 'AVAILABLE' | 'PENDING' | 'TAKEN';
-    } else {
-      // Default to showing only available items
-      where.status = 'AVAILABLE';
     }
+    // If status is 'all' or not provided, show all items
 
     const items = await prisma.item.findMany({
       where,
