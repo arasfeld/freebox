@@ -16,11 +16,6 @@ export const selectSortBy = createSelector(
   (search) => search.sortBy
 );
 
-export const selectIsSearching = createSelector(
-  [selectSearchState],
-  (search) => search.isSearching
-);
-
 export const selectHasActiveFilters = createSelector(
   [selectSearchFilters],
   (filters) =>
@@ -49,6 +44,9 @@ export const selectStatusFilter = createSelector(
   [selectSearchFilters],
   (filters) => filters.status
 );
+
+export const selectUserLocation = (state: RootState) =>
+  state.search.userLocation;
 
 // Combined selectors
 export const selectSearchStateSummary = createSelector(

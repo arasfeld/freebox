@@ -1,63 +1,62 @@
 'use client';
 
-import { Package, Clock, CheckCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
+import { DeleteModal } from '@/components/delete-modal';
 import { ItemCard } from '@/components/item-card';
 import { LoginBtn } from '@/components/login-btn';
 import { ModeToggle } from '@/components/mode-toggle';
-import { DeleteModal } from '@/components/delete-modal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CheckCircle, Clock, Package } from 'lucide-react';
 
 import type { Item } from '@/lib/features/items/itemsApi';
 
 interface DashboardItem {
-  id: string;
-  title: string;
-  description: string | null;
-  images: string[];
   category: string | null;
-  location: string | null;
-  status: string;
-  userId: string;
   createdAt: string | Date;
-  updatedAt: string | Date;
+  description: string | null;
+  id: string;
+  images: string[];
   interests: Array<{
     id: string;
-    userId: string;
-    timestamp: string | Date;
     selected: boolean;
+    timestamp: string | Date;
     userStats: Record<string, unknown>;
+    userId: string;
   }>;
+  location: string | null;
+  status: string;
+  title: string;
+  updatedAt: string | Date;
+  userId: string;
 }
 
 // Transform dashboard item to Item type for the ItemCard component
 const transformDashboardItemToItem = (dashboardItem: DashboardItem): Item => ({
-  id: dashboardItem.id,
-  title: dashboardItem.title,
-  description: dashboardItem.description || undefined,
-  images: dashboardItem.images,
   category: dashboardItem.category || undefined,
-  location: dashboardItem.location || undefined,
-  status: dashboardItem.status as 'AVAILABLE' | 'PENDING' | 'TAKEN',
   createdAt:
     typeof dashboardItem.createdAt === 'string'
       ? dashboardItem.createdAt
       : dashboardItem.createdAt.toISOString(),
-  user: {
-    id: dashboardItem.userId,
-    name: 'You',
-    email: undefined,
-    image: undefined,
-  },
-  isOwner: true,
+  description: dashboardItem.description || undefined,
   hasExpressedInterest: false,
+  id: dashboardItem.id,
+  images: dashboardItem.images,
+  isOwner: true,
+  location: dashboardItem.location || undefined,
+  status: dashboardItem.status as 'AVAILABLE' | 'PENDING' | 'TAKEN',
+  title: dashboardItem.title,
+  user: {
+    email: undefined,
+    id: dashboardItem.userId,
+    image: undefined,
+    name: 'You',
+  },
 });
 
 export default function DashboardPage() {
@@ -150,14 +149,38 @@ export default function DashboardPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="space-y-4 w-full max-w-md">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <div className="grid grid-cols-3 gap-4 mt-8">
-              <Skeleton className="h-20" />
-              <Skeleton className="h-20" />
-              <Skeleton className="h-20" />
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-16" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-48" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-4 w-3/4" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-32 w-full mb-4" />
+                    <Skeleton className="h-3 w-full mb-2" />
+                    <Skeleton className="h-3 w-2/3" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </div>

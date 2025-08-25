@@ -1,10 +1,11 @@
 'use client';
 
+import { use, useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
+import { AutoComplete } from '@/components/autocomplete';
+import { ImageUpload } from '@/components/image-upload';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -24,61 +25,117 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, Loader2, Save } from 'lucide-react';
 
-import { ImageUpload } from '@/components/image-upload';
+import { geocodeAddress, debounce } from '@/lib/location';
 
-interface FormData {
-  title: string;
-  description: string;
+import type { GeocodeResult } from '@/lib/location';
+
+interface EditItemFormData {
   category: string;
-  location: string;
+  description: string;
   images: string[];
+  latitude?: number;
+  location: string;
+  longitude?: number;
+  title: string;
 }
 
-export default function EditItemPage({ params }: { params: { id: string } }) {
+export default function EditItemPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { id } = use(params);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    description: '',
+
+  const [formData, setFormData] = useState<EditItemFormData>({
     category: '',
-    location: '',
+    description: '',
     images: [],
+    latitude: undefined,
+    location: '',
+    longitude: undefined,
+    title: '',
   });
+
+  // Location search state
+  const [locationSearch, setLocationSearch] = useState('');
+  const [locationOptions, setLocationOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+
+  // Debounced location search
+  const debouncedLocationSearch = useCallback(
+    debounce(async (query: string) => {
+      if (query.length < 2) {
+        setLocationOptions([]);
+        return;
+      }
+
+      setIsSearchingLocation(true);
+      try {
+        const results = await geocodeAddress(query);
+        const options = results.map((result) => ({
+          value: result.displayName,
+          label: result.displayName,
+        }));
+        setLocationOptions(options);
+      } catch (error) {
+        console.error('Location search error:', error);
+        setLocationOptions([]);
+      } finally {
+        setIsSearchingLocation(false);
+      }
+    }, 300),
+    []
+  );
+
+  // Handle location search input changes
+  useEffect(() => {
+    debouncedLocationSearch(locationSearch);
+  }, [locationSearch, debouncedLocationSearch]);
 
   const fetchItem = useCallback(async () => {
     try {
-      const response = await fetch(`/api/items/${params.id}`);
+      const response = await fetch(`/api/items/${id}`);
       if (response.ok) {
-        const item = await response.json();
+        const data = await response.json();
 
         // Check if user owns this item
-        if (item.user.id !== session?.user?.id) {
-          router.push('/');
+        if (!data.isOwner) {
+          router.push('/dashboard');
           return;
         }
 
         setFormData({
-          title: item.title || '',
-          description: item.description || '',
-          category: item.category || '',
-          location: item.location || '',
-          images: item.images || [],
+          title: data.title,
+          description: data.description || '',
+          category: data.category || '',
+          location: data.location || '',
+          latitude: data.latitude,
+          longitude: data.longitude,
+          images: data.images || [],
         });
+
+        // Initialize location search with current location
+        if (data.location) {
+          setLocationSearch(data.location);
+        }
       } else {
-        toast.error('Failed to load item');
-        router.push('/');
+        router.push('/dashboard');
       }
     } catch (error) {
       console.error('Error fetching item:', error);
-      toast.error('Failed to load item');
-      router.push('/');
+      router.push('/dashboard');
     } finally {
       setLoading(false);
     }
-  }, [params.id, router, session?.user?.id]);
+  }, [id, router]);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -89,20 +146,32 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
     }
 
     fetchItem();
-  }, [fetchItem, session, status, router]);
+  }, [session, status, fetchItem, router]);
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
+  const handleInputChange = (field: string, value: string | string[]) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleImagesChange = (images: string[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      images,
-    }));
+  const handleLocationSelect = (locationName: string) => {
+    // Find the full location data from search results
+    const locationData = locationOptions.find(
+      (opt) => opt.value === locationName
+    );
+
+    if (locationData) {
+      setFormData((prev) => ({
+        ...prev,
+        location: locationData.value,
+        // Note: We don't have coordinates from the autocomplete, so we'll need to geocode again
+        // or modify the autocomplete to return full location data
+      }));
+      setLocationSearch(locationData.value);
+    }
+
+    setLocationOptions([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,7 +179,7 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
     setSaving(true);
 
     try {
-      const response = await fetch(`/api/items/${params.id}`, {
+      const response = await fetch(`/api/items/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -119,10 +188,9 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
       });
 
       if (response.ok) {
-        toast.success('Item updated successfully!');
-        router.push(`/items/${params.id}`);
+        router.push('/dashboard');
       } else {
-        toast.error('Failed to update item');
+        console.error('Failed to update item');
       }
     } catch (error) {
       console.error('Error updating item:', error);
@@ -134,44 +202,38 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
   if (status === 'loading' || loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="mb-8">
-            <Skeleton className="h-8 w-48 mb-2" />
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-32" />
             <Skeleton className="h-4 w-64" />
           </div>
           <Card>
             <CardHeader>
-              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-6 w-24" />
               <Skeleton className="h-4 w-48" />
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-20" />
                   <Skeleton className="h-10 w-full" />
                 </div>
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-32 w-full" />
-                </div>
-                <div className="flex gap-4">
-                  <Skeleton className="h-10 w-24" />
-                  <Skeleton className="h-10 w-24" />
-                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-32 w-full" />
               </div>
             </CardContent>
           </Card>
@@ -252,14 +314,39 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
 
                 <div className="space-y-2">
                   <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) =>
-                      handleInputChange('location', e.target.value)
-                    }
-                    placeholder="Enter location"
+                  <AutoComplete
+                    selectedValue={formData.location}
+                    onSelectedValueChange={(locationName) => {
+                      const locationData = locationOptions.find(
+                        (opt) => opt.value === locationName
+                      );
+                      if (locationData) {
+                        handleInputChange('location', locationData.value);
+                      }
+                    }}
+                    searchValue={locationSearch}
+                    onSearchValueChange={setLocationSearch}
+                    items={locationOptions}
+                    isLoading={isSearchingLocation}
+                    emptyMessage="No locations found."
+                    placeholder="Search for a city, address, or place..."
                   />
+
+                  {/* Selected Location Display */}
+                  {formData.location && (
+                    <div className="mt-2 p-2 bg-muted rounded-md">
+                      <div className="flex items-center gap-2">
+                        <span>📍</span>
+                        <span className="text-sm">{formData.location}</span>
+                        {formData.latitude && formData.longitude && (
+                          <span className="text-xs text-muted-foreground">
+                            ({formData.latitude.toFixed(4)},{' '}
+                            {formData.longitude.toFixed(4)})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -267,22 +354,39 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
                 <Label>Images</Label>
                 <ImageUpload
                   images={formData.images}
-                  onImagesChange={handleImagesChange}
+                  onImagesChange={(images) =>
+                    handleInputChange('images', images)
+                  }
                   maxImages={5}
                 />
               </div>
 
-              <div className="flex gap-4">
-                <Button type="submit" disabled={saving} className="flex-1">
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </Button>
+              <div className="flex gap-4 pt-4">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.push(`/items/${params.id}`)}
-                  disabled={saving}
+                  onClick={() => router.push('/dashboard')}
+                  className="flex-1 flex items-center gap-2"
                 >
+                  <ArrowLeft className="h-4 w-4" />
                   Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 flex items-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

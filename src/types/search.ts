@@ -27,9 +27,56 @@ export const LOCATIONS = [
   'West Side',
 ] as const;
 
+// Enhanced location data with coordinates and metadata
+export const LOCATION_DATA = {
+  Downtown: {
+    name: 'Downtown',
+    coordinates: { lat: 40.7128, lng: -74.006 }, // Example coordinates
+    description: 'City center and business district',
+    icon: '🏙️',
+  },
+  'East Side': {
+    name: 'East Side',
+    coordinates: { lat: 40.7589, lng: -73.9851 },
+    description: 'Eastern residential and commercial area',
+    icon: '🌅',
+  },
+  'North Side': {
+    name: 'North Side',
+    coordinates: { lat: 40.7505, lng: -73.9934 },
+    description: 'Northern neighborhoods and parks',
+    icon: '🏔️',
+  },
+  'South Side': {
+    name: 'South Side',
+    coordinates: { lat: 40.7589, lng: -73.9851 },
+    description: 'Southern residential areas',
+    icon: '🌆',
+  },
+  Suburbs: {
+    name: 'Suburbs',
+    coordinates: { lat: 40.7505, lng: -73.9934 },
+    description: 'Outer suburban communities',
+    icon: '🏘️',
+  },
+  'West Side': {
+    name: 'West Side',
+    coordinates: { lat: 40.7589, lng: -73.9851 },
+    description: 'Western residential and cultural district',
+    icon: '🌇',
+  },
+} as const;
+
+// Distance-based sorting options
+export const DISTANCE_SORT_OPTIONS = [
+  { label: 'Nearest First', value: 'nearest' },
+  { label: 'Farthest First', value: 'farthest' },
+] as const;
+
 export const SORT_OPTIONS = [
   { label: 'Category', value: 'category' },
   { label: 'Location', value: 'location' },
+  { label: 'Distance', value: 'distance' },
   { label: 'Newest First', value: 'newest' },
   { label: 'Oldest First', value: 'oldest' },
   { label: 'Title A-Z', value: 'title' },
@@ -66,6 +113,7 @@ export type Location = (typeof LOCATIONS)[number];
 export type SortOption =
   | 'category'
   | 'location'
+  | 'distance'
   | 'newest'
   | 'oldest'
   | 'title';

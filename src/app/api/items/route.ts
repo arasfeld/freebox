@@ -120,7 +120,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, description, images, category, location } = body;
+    const {
+      title,
+      description,
+      images,
+      category,
+      location,
+      latitude,
+      longitude,
+    } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -133,6 +141,8 @@ export async function POST(request: NextRequest) {
         images: images || [],
         category,
         location,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
         userId: session.user.id,
       },
       include: {

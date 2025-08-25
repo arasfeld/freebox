@@ -2,26 +2,23 @@
 
 import { useCallback, useMemo } from 'react';
 
+import { ItemCard } from '@/components/item-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { ItemCard } from '@/components/item-card';
-
 import { useSearch } from '@/lib/features/search/useSearch';
+import { useAppSelector } from '@/lib/hooks';
+import { selectUserLocation } from '@/lib/features/search/searchSelectors';
+import { getItemDistance } from '@/lib/utils';
 
 import type { Item } from '@/lib/features/items/itemsApi';
 
 export function ItemGrid() {
-  const {
-    items,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-    sortBy,
-    hasActiveFilters,
-  } = useSearch();
+  const { items, isLoading, isError, error, sortBy, hasActiveFilters } =
+    useSearch();
+
+  const userLocation = useAppSelector(selectUserLocation);
 
   const sortItems = useCallback(
     (itemsToSort: Item[]): Item[] => {
@@ -48,14 +45,76 @@ export function ItemGrid() {
           return sortedItems.sort((a, b) =>
             (a.location || '').localeCompare(b.location || '')
           );
+        case 'distance':
+          if (
+            !userLocation ||
+            userLocation.lat === null ||
+            userLocation.lng === null
+          )
+            return sortedItems;
+
+          return sortedItems.sort((a, b) => {
+            const distanceA =
+              a.latitude &&
+              a.longitude &&
+              userLocation.lat !== null &&
+              userLocation.lng !== null
+                ? getItemDistance(
+                    userLocation.lat,
+                    userLocation.lng,
+                    a.latitude,
+                    a.longitude
+                  )
+                : null;
+            const distanceB =
+              b.latitude &&
+              b.longitude &&
+              userLocation.lat !== null &&
+              userLocation.lng !== null
+                ? getItemDistance(
+                    userLocation.lat,
+                    userLocation.lng,
+                    b.latitude,
+                    b.longitude
+                  )
+                : null;
+
+            if (distanceA === null && distanceB === null) return 0;
+            if (distanceA === null) return 1;
+            if (distanceB === null) return -1;
+
+            return distanceA - distanceB;
+          });
         default:
           return sortedItems;
       }
     },
-    [sortBy]
+    [sortBy, userLocation]
   );
 
   const sortedItems = useMemo(() => sortItems(items), [sortItems, items]);
+
+  // Add distance information to items if user location is available
+  const itemsWithDistance = useMemo(() => {
+    if (!userLocation || userLocation.lat === null || userLocation.lng === null)
+      return sortedItems;
+
+    return sortedItems.map((item) => ({
+      ...item,
+      distance:
+        item.latitude &&
+        item.longitude &&
+        userLocation.lat !== null &&
+        userLocation.lng !== null
+          ? getItemDistance(
+              userLocation.lat,
+              userLocation.lng,
+              item.latitude,
+              item.longitude
+            )
+          : null,
+    }));
+  }, [sortedItems, userLocation]);
 
   if (isLoading) {
     return (
@@ -123,28 +182,24 @@ export function ItemGrid() {
   }
 
   return (
-    <>
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-muted-foreground">
-            {sortedItems.length} item{sortedItems.length !== 1 ? 's' : ''} found
-            {sortBy !== 'newest' && ` • Sorted by ${sortBy}`}
-          </p>
-          {isFetching && (
-            <>
-              <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-              <span className="text-sm text-muted-foreground">
-                Searching...
-              </span>
-            </>
+    <div className="space-y-6">
+      {itemsWithDistance.length > 0 && (
+        <div className="text-sm text-muted-foreground">
+          {itemsWithDistance.length} item
+          {itemsWithDistance.length !== 1 ? 's' : ''} found
+          {userLocation && sortBy === 'distance' && (
+            <span className="ml-2">
+              • Sorted by distance from your location
+            </span>
           )}
         </div>
-      </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedItems.map((item) => (
+        {itemsWithDistance.map((item) => (
           <ItemCard key={item.id} item={item} />
         ))}
       </div>
-    </>
+    </div>
   );
 }

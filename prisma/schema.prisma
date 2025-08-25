@@ -36,6 +36,8 @@ model Item {
   images      String[]   // Array of image URLs
   category    String?
   location    String?
+  latitude    Float?     // Latitude coordinate
+  longitude   Float?     // Longitude coordinate
   status      ItemStatus @default(AVAILABLE)
   userId      String
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)

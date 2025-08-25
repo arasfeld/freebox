@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+import { LocationPicker } from '@/components/location-picker';
 import { SortOptions } from '@/components/sort-options';
 
 import {
@@ -101,6 +102,9 @@ export function SearchFilters() {
           className="w-full pl-10"
         />
       </div>
+
+      {/* Location Picker */}
+      <LocationPicker />
 
       {/* Filter Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

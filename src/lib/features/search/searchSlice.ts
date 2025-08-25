@@ -1,11 +1,15 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import type { SearchFilters, SortOption } from '@/types/search';
 
 interface SearchState {
   filters: SearchFilters;
   sortBy: SortOption;
-  isSearching: boolean;
+  userLocation: {
+    lat: number | null;
+    lng: number | null;
+    location: string | null;
+  } | null;
 }
 
 const initialState: SearchState = {
@@ -16,7 +20,7 @@ const initialState: SearchState = {
     status: 'all',
   },
   sortBy: 'newest',
-  isSearching: false,
+  userLocation: null,
 };
 
 export const searchSlice = createSlice({
@@ -34,9 +38,6 @@ export const searchSlice = createSlice({
     setCategory: (state, action: PayloadAction<string>) => {
       state.filters.category = action.payload;
     },
-    setIsSearching: (state, action: PayloadAction<boolean>) => {
-      state.isSearching = action.payload;
-    },
     setLocation: (state, action: PayloadAction<string>) => {
       state.filters.location = action.payload;
     },
@@ -49,17 +50,27 @@ export const searchSlice = createSlice({
     setSortBy: (state, action: PayloadAction<SortOption>) => {
       state.sortBy = action.payload;
     },
+    setUserLocation: (
+      state,
+      action: PayloadAction<{
+        lat: number;
+        lng: number;
+        location: string;
+      } | null>
+    ) => {
+      state.userLocation = action.payload;
+    },
   },
 });
 
 export const {
   clearFilters,
   setCategory,
-  setIsSearching,
   setLocation,
   setSearch,
   setStatus,
   setSortBy,
+  setUserLocation,
 } = searchSlice.actions;
 
 // Note: Selectors have been moved to searchSelectors.ts for better performance

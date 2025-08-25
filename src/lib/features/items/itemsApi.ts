@@ -9,6 +9,8 @@ export interface Item {
   images: string[];
   category?: string;
   location?: string;
+  latitude?: number;
+  longitude?: number;
   status: 'AVAILABLE' | 'PENDING' | 'TAKEN';
   createdAt: string;
   user: {
@@ -20,6 +22,7 @@ export interface Item {
   interests?: InterestEntry[];
   isOwner?: boolean;
   hasExpressedInterest?: boolean;
+  distance?: number | null;
 }
 
 export interface GetItemsParams {
