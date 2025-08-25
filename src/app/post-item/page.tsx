@@ -1,13 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -15,63 +18,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 
-import LoginBtn from '@/components/login-btn';
-import { ModeToggle } from '@/components/mode-toggle';
 import { ImageUpload } from '@/components/image-upload';
-import { ArrowLeft, Upload, Save } from 'lucide-react';
+import { LoginBtn } from '@/components/login-btn';
+import { ModeToggle } from '@/components/mode-toggle';
 
-const categories = [
-  'Furniture',
-  'Electronics',
-  'Clothing',
-  'Books',
-  'Sports',
-  'Home & Garden',
-  'Toys & Games',
-  'Other',
-];
-
-const locations = [
-  'Downtown',
-  'North Side',
-  'South Side',
-  'East Side',
-  'West Side',
-  'Suburbs',
-];
+interface FormData {
+  title: string;
+  description: string;
+  category: string;
+  location: string;
+  images: string[];
+}
 
 export default function PostItemPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     category: '',
     location: '',
-    images: [] as string[],
+    images: [],
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleImagesChange = (images: string[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      images,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!session?.user?.id) {
-      setError('You must be signed in to post an item');
-      return;
-    }
-
-    if (!formData.title.trim()) {
-      setError('Title is required');
-      return;
-    }
-
     setLoading(true);
-    setError(null);
 
     try {
       const response = await fetch('/api/items', {
@@ -82,32 +70,86 @@ export default function PostItemPage() {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create item');
+      if (response.ok) {
+        const result = await response.json();
+        toast.success('Item posted successfully!', {
+          description: 'Your item is now available for others to see.',
+        });
+        router.push(`/items/${result.id}`);
+      } else {
+        const error = await response.json();
+        toast.error('Failed to post item', {
+          description: error.message || 'Please try again.',
+        });
       }
-
-      const item = await response.json();
-      router.push(`/items/${item.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch (error) {
+      console.error('Error posting item:', error);
+      toast.error('Failed to post item', {
+        description: 'Please try again later.',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: string | string[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p>Loading...</p>
+      <div className="min-h-screen bg-background">
+        <header className="border-b">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold">Freebox</h1>
+              <p className="text-muted-foreground">Everything is free</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-10" />
+            </div>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-8">
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-24 w-full" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-32 w-full" />
+                  </div>
+                  <div className="flex gap-4">
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-24" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     );
@@ -211,37 +253,35 @@ export default function PostItemPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="Electronics">Electronics</SelectItem>
+                        <SelectItem value="Furniture">Furniture</SelectItem>
+                        <SelectItem value="Clothing">Clothing</SelectItem>
+                        <SelectItem value="Books">Books</SelectItem>
+                        <SelectItem value="Sports">Sports</SelectItem>
+                        <SelectItem value="Home & Garden">
+                          Home & Garden
+                        </SelectItem>
+                        <SelectItem value="Toys & Games">
+                          Toys & Games
+                        </SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="location">Location</Label>
-                    <Select
+                    <Input
+                      id="location"
                       value={formData.location}
-                      onValueChange={(value) =>
-                        handleInputChange('location', value)
+                      onChange={(e) =>
+                        handleInputChange('location', e.target.value)
                       }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {locations.map((location) => (
-                          <SelectItem key={location} value={location}>
-                            {location}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Enter your location"
+                    />
                   </div>
                 </div>
 
@@ -249,46 +289,22 @@ export default function PostItemPage() {
                   <Label>Images</Label>
                   <ImageUpload
                     images={formData.images}
-                    onImagesChange={(images) =>
-                      handleInputChange('images', images)
-                    }
+                    onImagesChange={handleImagesChange}
                     maxImages={5}
                   />
                 </div>
 
-                {error && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600">{error}</p>
-                  </div>
-                )}
-
-                <div className="flex space-x-4">
+                <div className="flex gap-4">
+                  <Button type="submit" disabled={loading} className="flex-1">
+                    {loading ? 'Posting...' : 'Post Item'}
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => router.push('/')}
                     disabled={loading}
-                    className="flex items-center gap-2"
                   >
-                    <ArrowLeft className="h-4 w-4" />
                     Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="flex items-center gap-2"
-                  >
-                    {loading ? (
-                      <>
-                        <Upload className="h-4 w-4" />
-                        Posting...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" />
-                        Post Item
-                      </>
-                    )}
                   </Button>
                 </div>
               </form>

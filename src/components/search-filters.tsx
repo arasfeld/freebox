@@ -5,6 +5,7 @@ import { Filter, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Kbd } from '@/components/ui/kbd';
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+
 import { SortOptions } from '@/components/sort-options';
 
 import {
@@ -197,11 +199,7 @@ export function SearchFilters() {
               <div className="text-sm text-muted-foreground">
                 {hasActiveFilters && (
                   <span>
-                    Press{' '}
-                    <kbd className="px-1 py-0.5 text-xs bg-muted rounded border">
-                      Esc
-                    </kbd>{' '}
-                    to clear
+                    Press <Kbd>Esc</Kbd> to clear
                   </span>
                 )}
               </div>

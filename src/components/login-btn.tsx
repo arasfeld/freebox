@@ -14,16 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default function LoginBtn() {
+export function LoginBtn() {
   const { data: session, status } = useSession();
 
   if (status === 'loading') {
-    return (
-      <Button variant="outline" disabled>
-        Loading...
-      </Button>
-    );
+    return <Skeleton className="h-10 w-32" />;
   }
 
   if (session) {

@@ -6,6 +6,7 @@ import { X, Upload } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ImageUploadProps {
   images: string[];
@@ -61,10 +62,10 @@ export function ImageUpload({
     [images, onImagesChange, maxImages]
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getInputProps, getRootProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'],
+      'image/*': ['.gif', '.jpeg', '.jpg', '.png', '.webp'],
     },
     maxSize: 5 * 1024 * 1024, // 5MB
     disabled: uploading || images.length >= maxImages,
@@ -92,7 +93,7 @@ export function ImageUpload({
               <input {...getInputProps()} />
               <div className="flex flex-col items-center space-y-2">
                 {uploading ? (
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
                 ) : (
                   <Upload className="h-8 w-8 text-gray-400" />
                 )}
@@ -156,7 +157,7 @@ export function ImageUpload({
       {/* Upload Progress */}
       {uploading && (
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
+          <Skeleton className="h-4 w-4 rounded-full" />
           <span>Uploading images...</span>
         </div>
       )}

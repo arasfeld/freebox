@@ -2,7 +2,8 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, use, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +15,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -22,11 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 
 import { ImageUpload } from '@/components/image-upload';
-import { ArrowLeft, Save, RotateCcw } from 'lucide-react';
 
-interface EditItemFormData {
+interface FormData {
   title: string;
   description: string;
   category: string;
@@ -34,18 +35,12 @@ interface EditItemFormData {
   images: string[];
 }
 
-export default function EditItemPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function EditItemPage({ params }: { params: { id: string } }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { id } = use(params);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const [formData, setFormData] = useState<EditItemFormData>({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     category: '',
@@ -55,33 +50,35 @@ export default function EditItemPage({
 
   const fetchItem = useCallback(async () => {
     try {
-      const response = await fetch(`/api/items/${id}`);
+      const response = await fetch(`/api/items/${params.id}`);
       if (response.ok) {
-        const data = await response.json();
+        const item = await response.json();
 
         // Check if user owns this item
-        if (!data.isOwner) {
-          router.push('/dashboard');
+        if (item.user.id !== session?.user?.id) {
+          router.push('/');
           return;
         }
 
         setFormData({
-          title: data.title,
-          description: data.description || '',
-          category: data.category || '',
-          location: data.location || '',
-          images: data.images || [],
+          title: item.title || '',
+          description: item.description || '',
+          category: item.category || '',
+          location: item.location || '',
+          images: item.images || [],
         });
       } else {
-        router.push('/dashboard');
+        toast.error('Failed to load item');
+        router.push('/');
       }
     } catch (error) {
       console.error('Error fetching item:', error);
-      router.push('/dashboard');
+      toast.error('Failed to load item');
+      router.push('/');
     } finally {
       setLoading(false);
     }
-  }, [id, router]);
+  }, [params.id, router, session?.user?.id]);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -92,12 +89,19 @@ export default function EditItemPage({
     }
 
     fetchItem();
-  }, [session, status, fetchItem, router]);
+  }, [fetchItem, session, status, router]);
 
-  const handleInputChange = (field: string, value: string | string[]) => {
+  const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  const handleImagesChange = (images: string[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      images,
     }));
   };
 
@@ -106,7 +110,7 @@ export default function EditItemPage({
     setSaving(true);
 
     try {
-      const response = await fetch(`/api/items/${id}`, {
+      const response = await fetch(`/api/items/${params.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -115,9 +119,10 @@ export default function EditItemPage({
       });
 
       if (response.ok) {
-        router.push('/dashboard');
+        toast.success('Item updated successfully!');
+        router.push(`/items/${params.id}`);
       } else {
-        console.error('Failed to update item');
+        toast.error('Failed to update item');
       }
     } catch (error) {
       console.error('Error updating item:', error);
@@ -129,8 +134,47 @@ export default function EditItemPage({
   if (status === 'loading' || loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-lg">Loading...</div>
+        <div className="max-w-2xl mx-auto">
+          <div className="mb-8">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-32 w-full" />
+                </div>
+                <div className="flex gap-4">
+                  <Skeleton className="h-10 w-24" />
+                  <Skeleton className="h-10 w-24" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -223,39 +267,22 @@ export default function EditItemPage({
                 <Label>Images</Label>
                 <ImageUpload
                   images={formData.images}
-                  onImagesChange={(images) =>
-                    handleInputChange('images', images)
-                  }
+                  onImagesChange={handleImagesChange}
                   maxImages={5}
                 />
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-4">
+                <Button type="submit" disabled={saving} className="flex-1">
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.push('/dashboard')}
-                  className="flex-1 flex items-center gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
+                  onClick={() => router.push(`/items/${params.id}`)}
                   disabled={saving}
-                  className="flex-1 flex items-center gap-2"
                 >
-                  {saving ? (
-                    <>
-                      <RotateCcw className="h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" />
-                      Save Changes
-                    </>
-                  )}
+                  Cancel
                 </Button>
               </div>
             </form>

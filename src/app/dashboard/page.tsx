@@ -1,18 +1,19 @@
 'use client';
 
+import { Package, Clock, CheckCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { ItemCard } from '@/components/item-card';
-import LoginBtn from '@/components/login-btn';
+import { LoginBtn } from '@/components/login-btn';
 import { ModeToggle } from '@/components/mode-toggle';
 import { DeleteModal } from '@/components/delete-modal';
-import { Package, Clock, CheckCircle } from 'lucide-react';
 
 import type { Item } from '@/lib/features/items/itemsApi';
 
@@ -150,7 +151,15 @@ export default function DashboardPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-lg">Loading...</div>
+          <div className="space-y-4 w-full max-w-md">
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <div className="grid grid-cols-3 gap-4 mt-8">
+              <Skeleton className="h-20" />
+              <Skeleton className="h-20" />
+              <Skeleton className="h-20" />
+            </div>
+          </div>
         </div>
       </div>
     );

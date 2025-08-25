@@ -4,6 +4,8 @@ import { useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+
 import { ItemCard } from '@/components/item-card';
 
 import { useSearch } from '@/lib/features/search/useSearch';
@@ -66,14 +68,14 @@ export function ItemGrid() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i}>
               <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <Skeleton className="h-4 w-3/4" />
               </CardHeader>
               <CardContent>
-                <div className="h-32 bg-gray-200 rounded mb-4"></div>
-                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                <Skeleton className="h-32 w-full mb-4" />
+                <Skeleton className="h-3 w-full mb-2" />
+                <Skeleton className="h-3 w-2/3" />
               </CardContent>
             </Card>
           ))}

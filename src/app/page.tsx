@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
 import { ItemGrid } from '@/components/item-grid';
-import LoginBtn from '@/components/login-btn';
+import { LoginBtn } from '@/components/login-btn';
 import { ModeToggle } from '@/components/mode-toggle';
 import { SearchFilters } from '@/components/search-filters';
 
