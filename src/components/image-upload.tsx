@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import Image from 'next/image';
 import { X, Upload } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -128,14 +127,18 @@ export function ImageUpload({
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {images.map((imageUrl, index) => (
             <div key={index} className="relative group">
-              <div className="aspect-square relative overflow-hidden rounded-lg border">
-                <Image
+              <div className="aspect-square relative overflow-hidden rounded-lg border bg-gray-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={imageUrl}
                   alt={`Uploaded image ${index + 1}`}
-                  fill
-                  className="object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200" />
+
                 <Button
                   size="sm"
                   variant="destructive"

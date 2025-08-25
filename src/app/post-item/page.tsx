@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import LoginBtn from '@/components/login-btn';
 import { ModeToggle } from '@/components/mode-toggle';
 import { ImageUpload } from '@/components/image-upload';
+import { ArrowLeft, Upload, Save } from 'lucide-react';
 
 const categories = [
   'Furniture',
@@ -267,11 +268,27 @@ export default function PostItemPage() {
                     variant="outline"
                     onClick={() => router.push('/')}
                     disabled={loading}
+                    className="flex items-center gap-2"
                   >
+                    <ArrowLeft className="h-4 w-4" />
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? 'Posting...' : 'Post Item'}
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Posting...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Post Item
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

@@ -2,7 +2,7 @@
 
 import { signIn, signOut, useSession } from 'next-auth/react';
 
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, LayoutDashboard } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -28,8 +30,8 @@ export default function LoginBtn() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
+          <Button variant="ghost" className="h-10 w-10 rounded-full p-0">
+            <Avatar className="h-8 w-8">
               <AvatarImage
                 src={session.user.image || ''}
                 alt={session.user.name || ''}
@@ -38,10 +40,27 @@ export default function LoginBtn() {
                 <User className="h-4 w-4" />
               </AvatarFallback>
             </Avatar>
-            <span>Signed in as {session.user.email}</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">
+                {session.user.name || 'User'}
+              </p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {session.user.email}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <a href="/dashboard" className="flex items-center">
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Dashboard
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => signOut()}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign out

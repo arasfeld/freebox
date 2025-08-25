@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
+import { Plus, Search } from 'lucide-react';
 
 import { ItemGrid } from '@/components/item-grid';
 import LoginBtn from '@/components/login-btn';
@@ -34,13 +36,17 @@ export default function HomePage() {
           </p>
           <div className="flex justify-center space-x-4">
             <Button size="lg" variant="secondary" asChild>
-              <a href="/post-item">Post an Item</a>
+              <Link href="/post-item" className="flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Post an Item
+              </Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="bg-white/10 text-white border-white/30 hover:bg-white hover:text-blue-600 backdrop-blur-sm"
+              className="bg-white/10 text-white border-white/30 hover:bg-white hover:text-blue-600 backdrop-blur-sm flex items-center gap-2"
             >
+              <Search className="h-5 w-5" />
               Browse Items
             </Button>
           </div>
@@ -60,7 +66,10 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-semibold">Available Items</h3>
             <Button asChild>
-              <a href="/post-item">Post an Item</a>
+              <Link href="/post-item" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Post an Item
+              </Link>
             </Button>
           </div>
 

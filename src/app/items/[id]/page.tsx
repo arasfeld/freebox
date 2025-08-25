@@ -1,34 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 
 import { ImageModal } from '@/components/image-modal';
+import { DeleteModal } from '@/components/delete-modal';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 
 import LoginBtn from '@/components/login-btn';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -42,38 +25,19 @@ import { toast } from 'sonner';
 
 import type { Item } from '@/lib/features/items/itemsApi';
 
-const categories = [
-  'Furniture',
-  'Electronics',
-  'Clothing',
-  'Books',
-  'Sports',
-  'Home & Garden',
-  'Toys & Games',
-  'Other',
-];
-
-const locations = [
-  'Downtown',
-  'North Side',
-  'South Side',
-  'East Side',
-  'West Side',
-  'Suburbs',
-];
-
-export default function ItemDetailPage() {
-  const params = useParams();
+export default function ItemDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
   const { data: session } = useSession();
+  const { id } = use(params);
 
   const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [editLoading, setEditLoading] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [localHasExpressedInterest, setLocalHasExpressedInterest] =
     useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -84,19 +48,11 @@ export default function ItemDetailPage() {
   const [removeInterest, { isLoading: isRemovingInterest }] =
     useRemoveInterestMutation();
 
-  const [editForm, setEditForm] = useState({
-    title: '',
-    description: '',
-    category: '',
-    location: '',
-    status: 'AVAILABLE' as 'AVAILABLE' | 'PENDING' | 'TAKEN',
-  });
-
   useEffect(() => {
-    if (params.id) {
-      fetchItem(params.id as string);
+    if (id) {
+      fetchItem(id);
     }
-  }, [params.id]);
+  }, [id]);
 
   const fetchItem = async (id: string) => {
     try {
@@ -108,13 +64,6 @@ export default function ItemDetailPage() {
       const data = await response.json();
       setItem(data);
       setLocalHasExpressedInterest(data.hasExpressedInterest || false);
-      setEditForm({
-        title: data.title,
-        description: data.description || '',
-        category: data.category || '',
-        location: data.location || '',
-        status: data.status,
-      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load item');
     } finally {
@@ -122,55 +71,13 @@ export default function ItemDetailPage() {
     }
   };
 
-  const handleEdit = () => {
-    setIsEditing(true);
+  const handleDelete = () => {
+    setDeleteModalOpen(true);
   };
 
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    if (item) {
-      setEditForm({
-        title: item.title,
-        description: item.description || '',
-        category: item.category || '',
-        location: item.location || '',
-        status: item.status,
-      });
-    }
-  };
-
-  const handleSaveEdit = async () => {
+  const confirmDelete = async () => {
     if (!item) return;
 
-    setEditLoading(true);
-    try {
-      const response = await fetch(`/api/items/${item.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editForm),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update item');
-      }
-
-      const updatedItem = await response.json();
-      setItem(updatedItem);
-      setIsEditing(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update item');
-    } finally {
-      setEditLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!item) return;
-
-    setDeleteLoading(true);
     try {
       const response = await fetch(`/api/items/${item.id}`, {
         method: 'DELETE',
@@ -184,9 +91,7 @@ export default function ItemDetailPage() {
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete item');
-      setShowDeleteDialog(false);
-    } finally {
-      setDeleteLoading(false);
+      setDeleteModalOpen(false);
     }
   };
 
@@ -453,120 +358,6 @@ export default function ItemDetailPage() {
               {isOwner && item.interests && item.interests.length > 0 && (
                 <InterestManagement item={item} />
               )}
-
-              {/* Edit Form */}
-              {isOwner && isEditing && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Edit Item</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-title">Title *</Label>
-                      <Input
-                        id="edit-title"
-                        value={editForm.title}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, title: e.target.value })
-                        }
-                        placeholder="Item title"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-description">Description</Label>
-                      <Textarea
-                        id="edit-description"
-                        value={editForm.description}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            description: e.target.value,
-                          })
-                        }
-                        placeholder="Describe the item..."
-                        rows={4}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-category">Category</Label>
-                        <Select
-                          value={editForm.category}
-                          onValueChange={(value) =>
-                            setEditForm({ ...editForm, category: value })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-location">Location</Label>
-                        <Select
-                          value={editForm.location}
-                          onValueChange={(value) =>
-                            setEditForm({ ...editForm, location: value })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select location" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {locations.map((location) => (
-                              <SelectItem key={location} value={location}>
-                                {location}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-status">Status</Label>
-                        <Select
-                          value={editForm.status}
-                          onValueChange={(
-                            value: 'AVAILABLE' | 'PENDING' | 'TAKEN'
-                          ) => setEditForm({ ...editForm, status: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="AVAILABLE">Available</SelectItem>
-                            <SelectItem value="PENDING">Pending</SelectItem>
-                            <SelectItem value="TAKEN">Taken</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-4 pt-4">
-                      <Button
-                        variant="outline"
-                        onClick={handleCancelEdit}
-                        disabled={editLoading}
-                      >
-                        Cancel
-                      </Button>
-                      <Button onClick={handleSaveEdit} disabled={editLoading}>
-                        {editLoading ? 'Saving...' : 'Save Changes'}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
 
             {/* Sidebar */}
@@ -607,27 +398,17 @@ export default function ItemDetailPage() {
                 <CardContent className="space-y-3">
                   {isOwner ? (
                     <>
-                      {!isEditing ? (
-                        <Button
-                          className="w-full"
-                          variant="outline"
-                          onClick={handleEdit}
-                        >
-                          Edit Item
-                        </Button>
-                      ) : (
-                        <Button
-                          className="w-full"
-                          variant="outline"
-                          onClick={handleCancelEdit}
-                        >
-                          Cancel Edit
-                        </Button>
-                      )}
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => router.push(`/items/${item.id}/edit`)}
+                      >
+                        Edit Item
+                      </Button>
                       <Button
                         className="w-full"
                         variant="destructive"
-                        onClick={() => setShowDeleteDialog(true)}
+                        onClick={handleDelete}
                       >
                         Delete Item
                       </Button>
@@ -703,34 +484,15 @@ export default function ItemDetailPage() {
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Item</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete &quot;{item.title}&quot;? This
-              action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-              disabled={deleteLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleteLoading}
-            >
-              {deleteLoading ? 'Deleting...' : 'Delete'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Item"
+        description="This action cannot be undone."
+        itemName={item?.title}
+      />
 
       {/* Image Modal */}
       <ImageModal
