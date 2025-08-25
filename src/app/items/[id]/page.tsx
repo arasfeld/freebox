@@ -98,13 +98,13 @@ export default function ItemDetailPage({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'AVAILABLE':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400 dark:bg-emerald-500/20';
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-400 dark:bg-amber-500/20';
       case 'TAKEN':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-500/10 text-slate-700 border-slate-500/20 dark:text-slate-400 dark:bg-slate-500/20';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-500/10 text-slate-700 border-slate-500/20 dark:text-slate-400 dark:bg-slate-500/20';
     }
   };
 

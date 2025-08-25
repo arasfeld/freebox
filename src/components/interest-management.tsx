@@ -67,7 +67,8 @@ export function InterestManagement({ item }: InterestManagementProps) {
       return {
         score: 0,
         label: 'New User',
-        color: 'bg-blue-100 text-blue-800',
+        color:
+          'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400 dark:bg-blue-500/20',
       };
     }
 
@@ -75,7 +76,8 @@ export function InterestManagement({ item }: InterestManagementProps) {
       return {
         score: 0,
         label: 'Taker Only',
-        color: 'bg-red-100 text-red-800',
+        color:
+          'bg-red-500/10 text-red-700 border-red-500/20 dark:text-red-400 dark:bg-red-500/20',
       };
     }
 
@@ -85,19 +87,22 @@ export function InterestManagement({ item }: InterestManagementProps) {
       return {
         score: ratio,
         label: 'Very Fair',
-        color: 'bg-green-100 text-green-800',
+        color:
+          'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400 dark:bg-emerald-500/20',
       };
     } else if (ratio >= 1) {
       return {
         score: ratio,
         label: 'Fair',
-        color: 'bg-yellow-100 text-yellow-800',
+        color:
+          'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-400 dark:bg-amber-500/20',
       };
     } else {
       return {
         score: ratio,
         label: 'Takes More',
-        color: 'bg-orange-100 text-orange-800',
+        color:
+          'bg-orange-500/10 text-orange-700 border-orange-500/20 dark:text-orange-400 dark:bg-orange-500/20',
       };
     }
   }, []);
@@ -152,7 +157,7 @@ export function InterestManagement({ item }: InterestManagementProps) {
         <CardTitle>
           Interest Management ({item.interests.length} interested)
           {(item.status as string) === 'TAKEN' && (
-            <Badge className="ml-2 bg-green-100 text-green-800">
+            <Badge className="ml-2 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400 dark:bg-emerald-500/20">
               Recipient Selected
             </Badge>
           )}
@@ -199,7 +204,7 @@ export function InterestManagement({ item }: InterestManagementProps) {
                   <p className="font-medium">
                     {interest.user?.name || 'Unknown User'}
                     {isSelected && (
-                      <Badge className="ml-2 bg-green-100 text-green-800">
+                      <Badge className="ml-2 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400 dark:bg-emerald-500/20">
                         Selected ✓
                       </Badge>
                     )}

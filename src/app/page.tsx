@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import { ItemGrid } from '@/components/item-grid';
 import LoginBtn from '@/components/login-btn';
@@ -26,65 +26,35 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-4">Give & Get for Free</h2>
-          <p className="text-xl mb-8 text-blue-100">
-            Join the community where everything is free. Post items you
-            don&apos;t need, find items you want.
-          </p>
-          <div className="flex justify-center space-x-4">
-            <Button size="lg" variant="secondary" asChild>
-              <Link href="/post-item" className="flex items-center gap-2">
-                <Plus className="h-5 w-5" />
-                Post an Item
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="bg-white/10 text-white border-white/30 hover:bg-white hover:text-blue-600 backdrop-blur-sm flex items-center gap-2"
-            >
-              <Search className="h-5 w-5" />
-              Browse Items
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Search and Filters */}
-      <section className="py-8 border-b">
-        <div className="container mx-auto px-4">
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Search and Filters */}
+        <div className="mb-8">
           <SearchFilters />
         </div>
-      </section>
 
-      {/* Items Grid */}
-      <section className="py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-semibold">Available Items</h3>
-            <Button asChild>
-              <Link href="/post-item" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Post an Item
-              </Link>
-            </Button>
-          </div>
-
-          <Suspense
-            fallback={<div className="text-center py-8">Loading items...</div>}
-          >
-            <ItemGrid />
-          </Suspense>
+        {/* Items Grid */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold">Available Items</h2>
+          <Button asChild>
+            <Link href="/post-item" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Post an Item
+            </Link>
+          </Button>
         </div>
-      </section>
+
+        <Suspense
+          fallback={<div className="text-center py-8">Loading items...</div>}
+        >
+          <ItemGrid />
+        </Suspense>
+      </main>
 
       {/* Footer */}
       <footer className="border-t py-8 mt-16">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2024 Freebox. A marketplace where everything is free.</p>
+          <p>&copy; 2024 Freebox. All rights reserved.</p>
         </div>
       </footer>
     </div>

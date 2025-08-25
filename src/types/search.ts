@@ -10,9 +10,12 @@ export const CATEGORIES = [
 ] as const;
 
 export const ITEM_STATUS_COLORS = {
-  AVAILABLE: 'bg-green-100 text-green-800',
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  TAKEN: 'bg-gray-100 text-gray-800',
+  AVAILABLE:
+    'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400 dark:bg-emerald-500/20',
+  PENDING:
+    'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-400 dark:bg-amber-500/20',
+  TAKEN:
+    'bg-slate-500/10 text-slate-700 border-slate-500/20 dark:text-slate-400 dark:bg-slate-500/20',
 } as const;
 
 export const LOCATIONS = [
