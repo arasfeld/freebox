@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
+
+import type { ItemStatus } from '@/types/database';
 
 // GET /api/items - List all available items
 export async function GET(request: NextRequest) {
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest) {
     const where: {
       category?: string;
       location?: { contains: string; mode: 'insensitive' };
-      status?: 'AVAILABLE' | 'PENDING' | 'TAKEN';
+      status?: ItemStatus;
       OR?: Array<{
         title?: { contains: string; mode: 'insensitive' };
         description?: { contains: string; mode: 'insensitive' };
@@ -55,7 +57,7 @@ export async function GET(request: NextRequest) {
       status !== 'all' &&
       (status === 'AVAILABLE' || status === 'PENDING' || status === 'TAKEN')
     ) {
-      where.status = status as 'AVAILABLE' | 'PENDING' | 'TAKEN';
+      where.status = status as ItemStatus;
     }
     // If status is 'all' or not provided, show all items
 

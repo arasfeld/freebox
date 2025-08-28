@@ -1,8 +1,77 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import type { ReverseGeocodeResult } from '@/types';
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Transforms a reverse geocoding result into a standardized location object
+ * with latitude, longitude, and a user-friendly location name.
+ */
+export function transformReverseGeocodeResult(
+  reverseGeocodeResult: ReverseGeocodeResult,
+  lat: number,
+  lng: number
+): { lat: number; lng: number; location: string } {
+  // Create a user-friendly display name
+  let displayName = reverseGeocodeResult.displayName;
+
+  // Try to create a more specific location name using available address fields
+  const address = reverseGeocodeResult.address;
+
+  // Prioritize municipality (most specific local government unit)
+  if (address.municipality && address.state) {
+    // Municipality, State format (e.g., "West Chester Township, Ohio")
+    displayName = `${address.municipality}, ${address.state}`;
+  } else if (address.municipality && address.county && address.state) {
+    // Municipality, County, State format (e.g., "West Chester Township, Butler County, Ohio")
+    displayName = `${address.municipality}, ${address.county}, ${address.state}`;
+  } else if (address.city && address.state) {
+    // City, State format (most common and user-friendly)
+    displayName = `${address.city}, ${address.state}`;
+  } else if (address.town && address.state) {
+    // Town, State format
+    displayName = `${address.town}, ${address.state}`;
+  } else if (address.village && address.state) {
+    // Village, State format
+    displayName = `${address.village}, ${address.state}`;
+  } else if (address.suburb && address.city && address.state) {
+    // Suburb, City, State format (very specific)
+    displayName = `${address.suburb}, ${address.city}, ${address.state}`;
+  } else if (address.neighbourhood && address.city && address.state) {
+    // Neighbourhood, City, State format
+    displayName = `${address.neighbourhood}, ${address.city}, ${address.state}`;
+  } else if (address.municipality) {
+    // Just municipality
+    displayName = address.municipality;
+  } else if (address.city) {
+    // Just city
+    displayName = address.city;
+  } else if (address.town) {
+    // Just town
+    displayName = address.town;
+  } else if (address.village) {
+    // Just village
+    displayName = address.village;
+  } else if (address.suburb && address.state) {
+    // Suburb, State
+    displayName = `${address.suburb}, ${address.state}`;
+  } else if (address.county && address.state) {
+    // County, State
+    displayName = `${address.county}, ${address.state}`;
+  } else if (address.state) {
+    // Just state (fallback)
+    displayName = address.state;
+  }
+
+  return {
+    lat,
+    lng,
+    location: displayName,
+  };
 }
 
 // Distance calculation utilities

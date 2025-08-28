@@ -11,7 +11,6 @@ import {
 } from './ui/command';
 import { Input } from './ui/input';
 import { Popover, PopoverAnchor, PopoverContent } from './ui/popover';
-import { Skeleton } from './ui/skeleton';
 
 type Props<T extends string> = {
   emptyMessage?: string;
@@ -98,17 +97,19 @@ export function AutoComplete<T extends string>({
                 e.preventDefault();
               }
             }}
-            className="w-[--radix-popover-trigger-width] p-0"
+            className="w-[var(--radix-popover-trigger-width)] p-0 border rounded-md shadow-md bg-popover"
+            align="start"
+            sideOffset={4}
           >
             <CommandList>
-              {isLoading && (
-                <CommandPrimitive.Loading>
-                  <div className="p-1">
-                    <Skeleton className="h-6 w-full" />
+              {isLoading ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Loading...
                   </div>
-                </CommandPrimitive.Loading>
-              )}
-              {items.length > 0 && !isLoading ? (
+                </div>
+              ) : items.length > 0 ? (
                 <CommandGroup>
                   {items.map((option) => (
                     <CommandItem
@@ -116,23 +117,25 @@ export function AutoComplete<T extends string>({
                       value={option.value}
                       onMouseDown={(e) => e.preventDefault()}
                       onSelect={onSelectItem}
+                      className="flex items-center gap-2"
                     >
                       <Check
                         className={cn(
-                          'mr-2 h-4 w-4',
+                          'mr-2 h-4 w-4 flex-shrink-0',
                           selectedValue === option.value
                             ? 'opacity-100'
                             : 'opacity-0'
                         )}
                       />
-                      {option.label}
+                      <span className="truncate text-sm">{option.label}</span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
-              ) : null}
-              {!isLoading ? (
+              ) : searchValue ? (
                 <CommandEmpty>{emptyMessage ?? 'No items.'}</CommandEmpty>
-              ) : null}
+              ) : (
+                <CommandEmpty>Start typing to search...</CommandEmpty>
+              )}
             </CommandList>
           </PopoverContent>
         </Command>

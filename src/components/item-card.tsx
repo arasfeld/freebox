@@ -14,6 +14,7 @@ import {
   HeartOff,
   User,
 } from 'lucide-react';
+import React from 'react';
 
 import { ImageModal } from '@/components/image-modal';
 
@@ -35,18 +36,19 @@ import {
 import { ITEM_STATUS_COLORS } from '@/types/search';
 import { formatDistance } from '@/lib/utils';
 
-import type { Item } from '@/lib/features/items/itemsApi';
+import type { ItemStatus, ItemWithDistance } from '@/types';
 
 interface ItemCardProps {
-  item: Item;
+  item: ItemWithDistance;
   onDelete?: (itemId: string) => void;
-  onStatusChange?: (
-    itemId: string,
-    newStatus: 'AVAILABLE' | 'PENDING' | 'TAKEN'
-  ) => void;
+  onStatusChange?: (itemId: string, newStatus: ItemStatus) => void;
 }
 
-export function ItemCard({ item, onDelete, onStatusChange }: ItemCardProps) {
+export const ItemCard = React.memo(function ItemCard({
+  item,
+  onDelete,
+  onStatusChange,
+}: ItemCardProps) {
   const [expressInterest, { isLoading: isExpressingInterest }] =
     useExpressInterestMutation();
   const [removeInterest, { isLoading: isRemovingInterest }] =
@@ -145,14 +147,16 @@ export function ItemCard({ item, onDelete, onStatusChange }: ItemCardProps) {
           {item.images.length > 0 && (
             <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden">
               <div
-                className="w-full h-full cursor-pointer hover:opacity-90 transition-opacity"
+                className="relative w-full h-full cursor-pointer hover:opacity-90 transition-opacity"
                 onClick={() => setImageModalOpen(true)}
               >
                 <Image
                   src={item.images[currentImageIndex]}
                   alt={item.title}
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-cover"
+                  priority={currentImageIndex === 0}
                 />
                 <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
                   <div className="opacity-0 hover:opacity-100 transition-opacity text-white bg-black/50 px-2 py-1 rounded text-xs">
@@ -350,4 +354,4 @@ export function ItemCard({ item, onDelete, onStatusChange }: ItemCardProps) {
       </Card>
     </TooltipProvider>
   );
-}
+});

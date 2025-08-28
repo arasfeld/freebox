@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 
 import { AutoComplete } from '@/components/autocomplete';
@@ -8,228 +8,155 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-import { useAppDispatch, useAppSelector } from '@/lib/hooks';
-import { setUserLocation } from '@/lib/features/search/searchSlice';
-import { selectUserLocation } from '@/lib/features/search/searchSelectors';
+import { useLocation } from '@/lib/hooks/useLocation';
 import {
-  geocodeAddress,
-  reverseGeocode,
-  getNearbyPlaces,
-} from '@/lib/location';
+  useGeocodeAddressQuery,
+  useGetNearbyPlacesQuery,
+} from '@/lib/features/location/locationApi';
 
-import type { GeocodeResult } from '@/lib/location';
+import type { GeocodeResult } from '@/types';
 
 export function LocationPicker() {
-  const dispatch = useAppDispatch();
-  const userLocation = useAppSelector(selectUserLocation);
+  const {
+    location: userLocation,
+    hasLocation,
+    isGettingLocation,
+    setLocation,
+    clearLocation,
+    getCurrentLocation,
+  } = useLocation();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
-  const [locationOptions, setLocationOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [nearbyPlaces, setNearbyPlaces] = useState<GeocodeResult[]>([]);
 
-  // Search for locations when search value changes
-  useEffect(() => {
-    const searchLocations = async () => {
-      if (searchValue.length < 2) {
-        setLocationOptions([]);
-        return;
+  // RTK Query hooks
+  const { data: locationOptions = [], isLoading: isSearching } =
+    useGeocodeAddressQuery(
+      { query: searchValue, limit: 5 },
+      {
+        skip: !searchValue || searchValue.length < 2,
       }
-
-      setIsSearching(true);
-      try {
-        const results = await geocodeAddress(searchValue);
-        const options = results.map((result) => ({
-          value: result.displayName,
-          label: result.displayName,
-        }));
-        setLocationOptions(options);
-      } catch (error) {
-        console.error('Search error:', error);
-        setLocationOptions([]);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    const timeoutId = setTimeout(searchLocations, 300);
-    return () => clearTimeout(timeoutId);
-  }, [searchValue]);
-
-  // Load nearby places when dialog opens
-  useEffect(() => {
-    if (isDialogOpen && userLocation) {
-      loadNearbyPlaces();
+    );
+  const { data: nearbyPlaces = [] } = useGetNearbyPlacesQuery(
+    {
+      lat: userLocation?.lat || 0,
+      lng: userLocation?.lng || 0,
+      radius: 5000,
+    },
+    {
+      skip: !userLocation?.lat || !userLocation?.lng,
     }
-  }, [isDialogOpen, userLocation]);
+  );
 
-  const loadNearbyPlaces = async () => {
-    if (!userLocation || userLocation.lat === null || userLocation.lng === null)
-      return;
+  // Transform location options for autocomplete - memoized to prevent unnecessary re-renders
+  const transformedLocationOptions = useMemo(
+    () =>
+      locationOptions.map((result) => ({
+        value: result.displayName,
+        label: result.displayName,
+      })),
+    [locationOptions]
+  );
 
+  const handleGetCurrentLocation = useCallback(async () => {
     try {
-      const places = await getNearbyPlaces(userLocation.lat, userLocation.lng);
-      setNearbyPlaces(places);
-    } catch (error) {
-      console.error('Error loading nearby places:', error);
-    }
-  };
-
-  const getCurrentLocation = useCallback(async () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by this browser.');
-      return;
-    }
-
-    setIsGettingLocation(true);
-
-    try {
-      const position = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 60000,
-          });
-        }
-      );
-
-      const { latitude, longitude } = position.coords;
-
-      // Reverse geocode to get the address
-      const address = await reverseGeocode(latitude, longitude);
-
-      if (address) {
-        dispatch(
-          setUserLocation({
-            lat: latitude,
-            lng: longitude,
-            location: address.displayName,
-          })
-        );
-
-        // Load nearby places
-        const places = await getNearbyPlaces(latitude, longitude);
-        setNearbyPlaces(places);
-      } else {
-        // Fallback to coordinates if reverse geocoding fails
-        dispatch(
-          setUserLocation({
-            lat: latitude,
-            lng: longitude,
-            location: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
-          })
-        );
-      }
-
+      await getCurrentLocation();
       setIsDialogOpen(false);
     } catch (error) {
-      console.error('Error getting location:', error);
       alert(
-        'Unable to get your location. Please search for a location instead.'
+        error instanceof Error
+          ? error.message
+          : 'Unable to get your location. Please search for a location instead.'
       );
-    } finally {
-      setIsGettingLocation(false);
     }
-  }, [dispatch]);
+  }, [getCurrentLocation]);
 
   const handleLocationSelect = useCallback(
     (locationName: string) => {
-      // Find the full location data from search results or nearby places
-      const allLocations = [
-        ...locationOptions.map((opt) => ({
-          displayName: opt.value,
-          lat: 0,
-          lng: 0,
-          city: '',
-          state: '',
-        })),
-        ...nearbyPlaces,
-      ];
-
-      const location = allLocations.find(
+      // Find the location data from search results
+      const location = locationOptions.find(
         (loc) => loc.displayName === locationName
       );
 
       if (location) {
-        dispatch(
-          setUserLocation({
-            lat: location.lat,
-            lng: location.lng,
-            location: location.displayName,
-          })
-        );
+        setLocation({
+          lat: location.lat,
+          lng: location.lng,
+          location: location.displayName,
+        });
       }
 
       setSearchValue('');
       setSelectedLocation('');
-      setLocationOptions([]);
       setIsDialogOpen(false);
     },
-    [dispatch, locationOptions, nearbyPlaces]
+    [locationOptions, setLocation]
   );
 
   const handleNearbyPlaceSelect = useCallback(
     (location: GeocodeResult) => {
-      dispatch(
-        setUserLocation({
-          lat: location.lat,
-          lng: location.lng,
-          location: location.displayName,
-        })
-      );
+      setLocation({
+        lat: location.lat,
+        lng: location.lng,
+        location: location.displayName,
+      });
       setIsDialogOpen(false);
     },
-    [dispatch]
+    [setLocation]
   );
 
-  const clearLocation = useCallback(() => {
-    dispatch(setUserLocation(null));
-    setNearbyPlaces([]);
-  }, [dispatch]);
+  const handleClearLocation = useCallback(() => {
+    clearLocation();
+    setSelectedLocation('');
+  }, [clearLocation]);
 
-  const getLocationIcon = (location: GeocodeResult) => {
+  const getLocationIcon = useCallback((location: GeocodeResult) => {
     if (location.city) return '🏙️';
     if (location.state) return '🗺️';
     return '📍';
-  };
+  }, []);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center gap-2">
           <MapPin className="h-4 w-4" />
-          {userLocation ? (
+          {userLocation?.location ? (
             <>
               📍
-              {userLocation.location && userLocation.location.length > 20
+              {userLocation.location.length > 20
                 ? `${userLocation.location.substring(0, 20)}...`
-                : userLocation.location || 'Unknown location'}
+                : userLocation.location}
             </>
           ) : (
             'Set Location'
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        aria-describedby="location-picker-description"
+      >
         <DialogHeader>
           <DialogTitle>Set Your Location</DialogTitle>
+          <DialogDescription>
+            Set your location to see items sorted by distance and find nearby
+            places.
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="max-w-full overflow-hidden space-y-4">
           {/* Current Location Button */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Use Current Location</label>
             <Button
-              onClick={getCurrentLocation}
+              onClick={handleGetCurrentLocation}
               disabled={isGettingLocation}
               className="w-full"
               variant="outline"
@@ -249,15 +176,15 @@ export function LocationPicker() {
               onSelectedValueChange={handleLocationSelect}
               searchValue={searchValue}
               onSearchValueChange={setSearchValue}
-              items={locationOptions}
+              items={transformedLocationOptions}
               isLoading={isSearching}
               emptyMessage="No locations found."
               placeholder="Search for a city, address, or place..."
             />
           </div>
 
-          {/* Nearby Places */}
-          {nearbyPlaces.length > 0 && (
+          {/* Nearby Places - only show if user has a location set */}
+          {hasLocation && nearbyPlaces.length > 0 && (
             <div className="space-y-2">
               <label className="text-sm font-medium">Nearby Places</label>
               <div className="max-h-40 overflow-y-auto space-y-1">
@@ -267,14 +194,16 @@ export function LocationPicker() {
                     onClick={() => handleNearbyPlaceSelect(place)}
                     className="w-full text-left p-2 rounded-md hover:bg-muted transition-colors"
                   >
-                    <div className="flex items-center gap-2">
-                      <span>{getLocationIcon(place)}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex-shrink-0">
+                        {getLocationIcon(place)}
+                      </span>
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="font-medium truncate text-sm">
                           {place.displayName}
                         </div>
                         {place.city && place.state && (
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground truncate">
                             {place.city}, {place.state}
                           </div>
                         )}
@@ -286,22 +215,22 @@ export function LocationPicker() {
             </div>
           )}
 
-          {/* Current Location Display */}
-          {userLocation && (
+          {/* Current Location Display - only show if location is set */}
+          {userLocation?.location && (
             <div className="space-y-2">
               <label className="text-sm font-medium">Current Location</label>
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-2">
-                  <span>📍</span>
-                  <span className="font-medium truncate">
+              <div className="flex items-center justify-between p-3 border rounded-lg min-w-0">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="flex-shrink-0">📍</span>
+                  <span className="font-medium truncate text-sm">
                     {userLocation.location}
                   </span>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={clearLocation}
-                  className="text-muted-foreground hover:text-destructive"
+                  onClick={handleClearLocation}
+                  className="text-muted-foreground hover:text-destructive flex-shrink-0 ml-2"
                 >
                   Clear
                 </Button>

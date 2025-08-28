@@ -1,20 +1,19 @@
 import { useMemo } from 'react';
 
-import { useGetItemsQuery } from '../items/itemsApi';
 import { useAppSelector } from '../../hooks';
-import { selectSearchFilters, selectSortBy } from './searchSelectors';
+import { useGetItemsQuery } from '../items/itemsApi';
+import { selectFilters, selectHasActiveFilters } from './searchSelectors';
 
-import type { Item } from '../items/itemsApi';
-import type { SearchFilters, SortOption } from '@/types/search';
+import type { ItemWithDistance, SearchFilters } from '@/types';
 
 interface UseSearchReturn {
-  items: Item[];
+  items: ItemWithDistance[];
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
   error: unknown;
   filters: SearchFilters;
-  sortBy: SortOption;
+  sortBy: string;
   hasActiveFilters: boolean;
   searchQuery: string;
   categoryFilter: string;
@@ -23,8 +22,8 @@ interface UseSearchReturn {
 }
 
 export function useSearch(): UseSearchReturn {
-  const filters = useAppSelector(selectSearchFilters);
-  const sortBy = useAppSelector(selectSortBy);
+  const filters = useAppSelector(selectFilters);
+  const hasActiveFilters = useAppSelector(selectHasActiveFilters);
 
   const {
     data: items = [],
@@ -37,12 +36,6 @@ export function useSearch(): UseSearchReturn {
   });
 
   const enhancedState = useMemo(() => {
-    const hasActiveFilters =
-      filters.search !== '' ||
-      filters.category !== 'all' ||
-      filters.location !== 'all' ||
-      filters.status !== 'all';
-
     return {
       items,
       isLoading,
@@ -50,14 +43,14 @@ export function useSearch(): UseSearchReturn {
       isError,
       error,
       filters,
-      sortBy,
+      sortBy: filters.sortBy,
       hasActiveFilters,
       searchQuery: filters.search,
       categoryFilter: filters.category,
       locationFilter: filters.location,
       statusFilter: filters.status,
     };
-  }, [items, isLoading, isFetching, isError, error, filters, sortBy]);
+  }, [items, isLoading, isFetching, isError, error, filters, hasActiveFilters]);
 
   return enhancedState;
 }

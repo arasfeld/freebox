@@ -12,10 +12,10 @@ import { useSelectRecipientMutation } from '@/lib/features/items/itemsApi';
 import { ITEM_STATUS_COLORS } from '@/types/search';
 
 import type { InterestEntry } from '@/types/search';
-import type { Item } from '@/lib/features/items/itemsApi';
+import type { ItemWithDistance, ItemInterest } from '@/types';
 
 interface InterestManagementProps {
-  item: Item;
+  item: ItemWithDistance;
 }
 
 export function InterestManagement({ item }: InterestManagementProps) {
@@ -25,8 +25,9 @@ export function InterestManagement({ item }: InterestManagementProps) {
   const handleSelectRecipient = useCallback(
     async (recipientUserId: string) => {
       const recipientName =
-        item.interests?.find((interest) => interest.userId === recipientUserId)
-          ?.user?.name || 'Unknown User';
+        item.interests?.find(
+          (interest: ItemInterest) => interest.userId === recipientUserId
+        )?.user?.name || 'Unknown User';
 
       try {
         await selectRecipient({ itemId: item.id, recipientUserId }).unwrap();
@@ -55,7 +56,7 @@ export function InterestManagement({ item }: InterestManagementProps) {
   const sortedInterests = useMemo(() => {
     if (!item.interests) return [];
     return [...item.interests].sort(
-      (a, b) =>
+      (a: ItemInterest, b: ItemInterest) =>
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
   }, [item.interests]);
@@ -113,7 +114,7 @@ export function InterestManagement({ item }: InterestManagementProps) {
 
   if ((item.status as string) === 'TAKEN') {
     const selectedInterest = item.interests?.find(
-      (interest) => interest.selected
+      (interest: ItemInterest) => interest.selected
     );
     const recipientName = selectedInterest?.user?.name || 'Unknown User';
 

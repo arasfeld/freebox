@@ -1,63 +1,53 @@
 import { createSelector } from '@reduxjs/toolkit';
 
-import type { RootState } from '../../store';
+import type { RootState } from '@/lib/store';
 
-// Base selectors
-const selectSearchState = (state: RootState) => state.search;
+// Basic selectors
+export const selectSearchState = (state: RootState) => state.search;
 
-// Memoized selectors
-export const selectSearchFilters = createSelector(
-  [selectSearchState],
-  (search) => search.filters
-);
+export const selectFilters = (state: RootState) => state.search.filters;
 
-export const selectSortBy = createSelector(
-  [selectSearchState],
-  (search) => search.sortBy
-);
+export const selectSearch = (state: RootState) => state.search.filters.search;
 
-export const selectHasActiveFilters = createSelector(
-  [selectSearchFilters],
-  (filters) =>
-    filters.search !== '' ||
-    filters.category !== 'all' ||
-    filters.location !== 'all' ||
-    filters.status !== 'all'
-);
+export const selectCategory = (state: RootState) =>
+  state.search.filters.category;
 
-export const selectSearchQuery = createSelector(
-  [selectSearchFilters],
-  (filters) => filters.search
-);
+export const selectLocation = (state: RootState) =>
+  state.search.filters.location;
 
-export const selectCategoryFilter = createSelector(
-  [selectSearchFilters],
-  (filters) => filters.category
-);
+export const selectStatus = (state: RootState) => state.search.filters.status;
 
-export const selectLocationFilter = createSelector(
-  [selectSearchFilters],
-  (filters) => filters.location
-);
-
-export const selectStatusFilter = createSelector(
-  [selectSearchFilters],
-  (filters) => filters.status
-);
+export const selectSortBy = (state: RootState) => state.search.filters.sortBy;
 
 export const selectUserLocation = (state: RootState) =>
   state.search.userLocation;
 
-// Combined selectors
-export const selectSearchStateSummary = createSelector(
-  [selectSearchFilters, selectSortBy, selectHasActiveFilters],
-  (filters, sortBy, hasActiveFilters) => ({
-    filters,
-    sortBy,
-    hasActiveFilters,
-    searchQuery: filters.search,
-    categoryFilter: filters.category,
-    locationFilter: filters.location,
-    statusFilter: filters.status,
-  })
+// Computed selectors
+export const selectHasActiveFilters = createSelector(
+  [selectFilters],
+  (filters) => {
+    return (
+      filters.search !== '' ||
+      filters.category !== 'all' ||
+      filters.location !== 'all' ||
+      filters.status !== 'all'
+    );
+  }
+);
+
+export const selectFilterSummary = createSelector(
+  [selectFilters],
+  (filters) => {
+    const activeFilters = [];
+
+    if (filters.search) activeFilters.push(`Search: "${filters.search}"`);
+    if (filters.category !== 'all')
+      activeFilters.push(`Category: ${filters.category}`);
+    if (filters.location !== 'all')
+      activeFilters.push(`Location: ${filters.location}`);
+    if (filters.status !== 'all')
+      activeFilters.push(`Status: ${filters.status}`);
+
+    return activeFilters;
+  }
 );

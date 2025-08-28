@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 
 import { itemsApi } from './features/items/itemsApi';
+import { locationApi } from './features/location/locationApi';
 import { searchSlice } from './features/search/searchSlice';
 
 export const makeStore = () => {
@@ -8,9 +9,13 @@ export const makeStore = () => {
     reducer: {
       search: searchSlice.reducer,
       [itemsApi.reducerPath]: itemsApi.reducer,
+      [locationApi.reducerPath]: locationApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(itemsApi.middleware),
+      getDefaultMiddleware().concat(
+        itemsApi.middleware,
+        locationApi.middleware
+      ),
   });
 };
 

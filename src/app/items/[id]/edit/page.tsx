@@ -25,11 +25,10 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { Layout } from '@/components/layout';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 
-import { geocodeAddress, debounce } from '@/lib/location';
-
-import type { GeocodeResult } from '@/lib/location';
+import { useLocationSearch } from '@/lib/features/location/useLocationSearch';
 
 interface EditItemFormData {
   category: string;
@@ -62,43 +61,17 @@ export default function EditItemPage({
     title: '',
   });
 
-  // Location search state
-  const [locationSearch, setLocationSearch] = useState('');
-  const [locationOptions, setLocationOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
-  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
-
-  // Debounced location search
-  const debouncedLocationSearch = useCallback(
-    debounce(async (query: string) => {
-      if (query.length < 2) {
-        setLocationOptions([]);
-        return;
-      }
-
-      setIsSearchingLocation(true);
-      try {
-        const results = await geocodeAddress(query);
-        const options = results.map((result) => ({
-          value: result.displayName,
-          label: result.displayName,
-        }));
-        setLocationOptions(options);
-      } catch (error) {
-        console.error('Location search error:', error);
-        setLocationOptions([]);
-      } finally {
-        setIsSearchingLocation(false);
-      }
-    }, 300),
-    []
-  );
-
-  // Handle location search input changes
-  useEffect(() => {
-    debouncedLocationSearch(locationSearch);
-  }, [locationSearch, debouncedLocationSearch]);
+  // Use optimized location search hook
+  const {
+    searchValue: locationSearch,
+    locationOptions: transformedLocationOptions,
+    isLoading: isSearchingLocation,
+    handleSearchChange: setLocationSearch,
+  } = useLocationSearch({
+    debounceMs: 300,
+    minQueryLength: 2,
+    maxResults: 5,
+  });
 
   const fetchItem = useCallback(async () => {
     try {
@@ -135,7 +108,7 @@ export default function EditItemPage({
     } finally {
       setLoading(false);
     }
-  }, [id, router]);
+  }, [id, router, setLocationSearch]);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -148,56 +121,58 @@ export default function EditItemPage({
     fetchItem();
   }, [session, status, fetchItem, router]);
 
-  const handleInputChange = (field: string, value: string | string[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleLocationSelect = (locationName: string) => {
-    // Find the full location data from search results
-    const locationData = locationOptions.find(
-      (opt) => opt.value === locationName
-    );
-
-    if (locationData) {
+  const handleInputChange = useCallback(
+    (field: string, value: string | string[]) => {
       setFormData((prev) => ({
         ...prev,
-        location: locationData.value,
-        // Note: We don't have coordinates from the autocomplete, so we'll need to geocode again
-        // or modify the autocomplete to return full location data
+        [field]: value,
       }));
-      setLocationSearch(locationData.value);
-    }
+    },
+    []
+  );
 
-    setLocationOptions([]);
-  };
+  const handleLocationSelect = useCallback(
+    (locationName: string) => {
+      setFormData((prev) => ({
+        ...prev,
+        location: locationName,
+        // For now, we'll need to get coordinates from another API call
+        latitude: undefined,
+        longitude: undefined,
+      }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+      setLocationSearch('');
+    },
+    [setLocationSearch]
+  );
 
-    try {
-      const response = await fetch(`/api/items/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setSaving(true);
 
-      if (response.ok) {
-        router.push('/dashboard');
-      } else {
-        console.error('Failed to update item');
+      try {
+        const response = await fetch(`/api/items/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+
+        if (response.ok) {
+          router.push('/dashboard');
+        } else {
+          console.error('Failed to update item');
+        }
+      } catch (error) {
+        console.error('Error updating item:', error);
+      } finally {
+        setSaving(false);
       }
-    } catch (error) {
-      console.error('Error updating item:', error);
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+    [formData, id, router]
+  );
 
   if (status === 'loading' || loading) {
     return (
@@ -247,7 +222,7 @@ export default function EditItemPage({
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <Layout>
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Edit Item</h1>
@@ -316,17 +291,10 @@ export default function EditItemPage({
                   <Label htmlFor="location">Location</Label>
                   <AutoComplete
                     selectedValue={formData.location}
-                    onSelectedValueChange={(locationName) => {
-                      const locationData = locationOptions.find(
-                        (opt) => opt.value === locationName
-                      );
-                      if (locationData) {
-                        handleInputChange('location', locationData.value);
-                      }
-                    }}
+                    onSelectedValueChange={handleLocationSelect}
                     searchValue={locationSearch}
                     onSearchValueChange={setLocationSearch}
-                    items={locationOptions}
+                    items={transformedLocationOptions}
                     isLoading={isSearchingLocation}
                     emptyMessage="No locations found."
                     placeholder="Search for a city, address, or place..."
@@ -393,6 +361,6 @@ export default function EditItemPage({
           </CardContent>
         </Card>
       </div>
-    </div>
+    </Layout>
   );
 }

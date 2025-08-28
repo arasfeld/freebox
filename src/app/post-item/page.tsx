@@ -1,10 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { ArrowLeft, Save, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useCallback, useState } from 'react';
 
 import { AutoComplete } from '@/components/autocomplete';
+import { ImageUpload } from '@/components/image-upload';
+import { Layout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,14 +22,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 
-import { LoginBtn } from '@/components/login-btn';
-import { ModeToggle } from '@/components/mode-toggle';
-import { ImageUpload } from '@/components/image-upload';
-import { ArrowLeft, Save, Upload } from 'lucide-react';
-
-import { geocodeAddress } from '@/lib/location';
-
-import type { GeocodeResult } from '@/lib/location';
+import { useLocationSearch } from '@/lib/features/location/useLocationSearch';
 
 const categories = [
   'Books',
@@ -46,120 +42,79 @@ export default function PostItemPage() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
-  const [locationSearch, setLocationSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
-  const [locationOptions, setLocationOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
-  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
-  const [selectedCoordinates, setSelectedCoordinates] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Search for locations when search value changes
-  useEffect(() => {
-    const searchLocations = async () => {
-      if (locationSearch.length < 2) {
-        setLocationOptions([]);
+  // Use optimized location search hook
+  const {
+    searchValue: locationSearch,
+    locationOptions: transformedLocationOptions,
+    isLoading: isSearchingLocation,
+    handleSearchChange: setLocationSearch,
+  } = useLocationSearch({
+    debounceMs: 300,
+    minQueryLength: 2,
+    maxResults: 5,
+  });
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      if (!title.trim()) {
+        alert('Please enter a title for your item.');
         return;
       }
 
-      setIsSearchingLocation(true);
+      setIsSubmitting(true);
+
       try {
-        const results = await geocodeAddress(locationSearch);
-        const options = results.map((result) => ({
-          value: result.displayName,
-          label: result.displayName,
-        }));
-        setLocationOptions(options);
+        const response = await fetch('/api/items', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: title.trim(),
+            description: description.trim(),
+            category: category || null,
+            location: location || null,
+            latitude: null,
+            longitude: null,
+            images,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create item');
+        }
+
+        const item = await response.json();
+        router.push(`/items/${item.id}`);
       } catch (error) {
-        console.error('Location search error:', error);
-        setLocationOptions([]);
+        console.error('Error creating item:', error);
+        alert('Failed to create item. Please try again.');
       } finally {
-        setIsSearchingLocation(false);
+        setIsSubmitting(false);
       }
-    };
+    },
+    [title, description, category, location, images, router]
+  );
 
-    const timeoutId = setTimeout(searchLocations, 300);
-    return () => clearTimeout(timeoutId);
-  }, [locationSearch]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!title.trim()) {
-      alert('Please enter a title for your item.');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch('/api/items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim(),
-          category: category || null,
-          location: location || null,
-          latitude: selectedCoordinates?.lat || null,
-          longitude: selectedCoordinates?.lng || null,
-          images,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create item');
-      }
-
-      const item = await response.json();
-      router.push(`/items/${item.id}`);
-    } catch (error) {
-      console.error('Error creating item:', error);
-      alert('Failed to create item. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleLocationSelect = (locationName: string) => {
-    // Find the full location data from search results
-    const locationData = locationOptions.find(
-      (opt) => opt.value === locationName
-    );
-
-    if (locationData) {
-      setLocation(locationData.value);
-      setSelectedLocation(locationData.value);
-      // Note: We don't have coordinates from the autocomplete, so we'll need to geocode again
-      // or modify the autocomplete to return full location data
-    }
-
-    setLocationSearch('');
-    setLocationOptions([]);
-  };
+  const handleLocationSelect = useCallback(
+    (locationName: string) => {
+      setLocation(locationName);
+      setSelectedLocation(locationName);
+      // Clear the search input
+      setLocationSearch('');
+    },
+    [setLocationSearch]
+  );
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-8 w-32" />
-              <Skeleton className="h-4 w-40" />
-            </div>
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-10 w-24" />
-              <Skeleton className="h-10 w-10" />
-            </div>
-          </div>
-        </header>
+      <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="space-y-2">
@@ -197,58 +152,27 @@ export default function PostItemPage() {
             </Card>
           </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
-  if (!session) {
+  if (!session?.user?.id) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold">Freebox</h1>
-              <p className="text-muted-foreground">Everything is free</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <LoginBtn />
-              <ModeToggle />
-            </div>
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <h1 className="text-2xl font-bold mb-4">Sign in Required</h1>
+            <p className="text-muted-foreground mb-6">
+              You need to sign in to post an item.
+            </p>
           </div>
-        </header>
-
-        <div className="container mx-auto px-4 py-16 text-center">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle>Sign in to Post an Item</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                You need to be signed in to post items to the marketplace.
-              </p>
-              <LoginBtn />
-            </CardContent>
-          </Card>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold">Freebox</h1>
-            <p className="text-muted-foreground">Everything is free</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <LoginBtn />
-            <ModeToggle />
-          </div>
-        </div>
-      </header>
-
+    <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
@@ -314,7 +238,7 @@ export default function PostItemPage() {
                       onSelectedValueChange={handleLocationSelect}
                       searchValue={locationSearch}
                       onSearchValueChange={setLocationSearch}
-                      items={locationOptions}
+                      items={transformedLocationOptions}
                       isLoading={isSearchingLocation}
                       emptyMessage="No locations found."
                       placeholder="Search for a city, address, or place..."
@@ -326,12 +250,12 @@ export default function PostItemPage() {
                         <div className="flex items-center gap-2">
                           <span>📍</span>
                           <span className="text-sm">{location}</span>
-                          {selectedCoordinates && (
-                            <span className="text-xs text-muted-foreground">
-                              ({selectedCoordinates.lat.toFixed(4)},{' '}
-                              {selectedCoordinates.lng.toFixed(4)})
-                            </span>
-                          )}
+                          {/* selectedCoordinates && ( // This line was removed */}
+                          {/*   <span className="text-xs text-muted-foreground"> */}
+                          {/*     ({selectedCoordinates.lat.toFixed(4)},{' '} */}
+                          {/*     {selectedCoordinates.lng.toFixed(4)}) */}
+                          {/*   </span> */}
+                          {/* ) */}
                         </div>
                       </div>
                     )}
@@ -387,6 +311,6 @@ export default function PostItemPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

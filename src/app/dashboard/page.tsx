@@ -1,62 +1,51 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { CheckCircle, Clock, Package } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
 
 import { DeleteModal } from '@/components/delete-modal';
 import { ItemCard } from '@/components/item-card';
-import { LoginBtn } from '@/components/login-btn';
-import { ModeToggle } from '@/components/mode-toggle';
+import { Layout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, Clock, Package } from 'lucide-react';
 
-import type { Item } from '@/lib/features/items/itemsApi';
-
-interface DashboardItem {
-  category: string | null;
-  createdAt: string | Date;
-  description: string | null;
-  id: string;
-  images: string[];
-  interests: Array<{
-    id: string;
-    selected: boolean;
-    timestamp: string | Date;
-    userStats: Record<string, unknown>;
-    userId: string;
-  }>;
-  location: string | null;
-  status: string;
-  title: string;
-  updatedAt: string | Date;
-  userId: string;
-}
+import type { DashboardItem, Item, ItemStatus } from '@/types';
 
 // Transform dashboard item to Item type for the ItemCard component
 const transformDashboardItemToItem = (dashboardItem: DashboardItem): Item => ({
-  category: dashboardItem.category || undefined,
-  createdAt:
+  category: dashboardItem.category,
+  createdAt: new Date(
     typeof dashboardItem.createdAt === 'string'
       ? dashboardItem.createdAt
-      : dashboardItem.createdAt.toISOString(),
-  description: dashboardItem.description || undefined,
-  hasExpressedInterest: false,
+      : dashboardItem.createdAt.toISOString()
+  ),
+  description: dashboardItem.description,
   id: dashboardItem.id,
   images: dashboardItem.images,
-  isOwner: true,
-  location: dashboardItem.location || undefined,
-  status: dashboardItem.status as 'AVAILABLE' | 'PENDING' | 'TAKEN',
+  latitude: dashboardItem.latitude,
+  longitude: dashboardItem.longitude,
+  location: dashboardItem.location,
+  status: dashboardItem.status as ItemStatus,
   title: dashboardItem.title,
+  updatedAt: new Date(
+    typeof dashboardItem.updatedAt === 'string'
+      ? dashboardItem.updatedAt
+      : dashboardItem.updatedAt.toISOString()
+  ),
+  userId: dashboardItem.userId,
   user: {
-    email: undefined,
+    email: dashboardItem.userEmail,
     id: dashboardItem.userId,
-    image: undefined,
-    name: 'You',
+    image: dashboardItem.userImage,
+    name: dashboardItem.userName || 'Unknown User',
+    emailVerified: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
+  interests: dashboardItem.interests,
 });
 
 export default function DashboardPage() {
@@ -66,18 +55,7 @@ export default function DashboardPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | null>(null);
 
-  useEffect(() => {
-    if (status === 'loading') return;
-
-    if (!session?.user?.id) {
-      redirect('/');
-      return;
-    }
-
-    fetchUserItems();
-  }, [session, status]);
-
-  const fetchUserItems = async () => {
+  const fetchUserItems = useCallback(async () => {
     try {
       const response = await fetch('/api/items/user');
       if (response.ok) {
@@ -89,17 +67,31 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleItemDelete = async (itemId: string) => {
-    const item = items.find((item) => item.id === itemId);
-    if (!item) return;
+  useEffect(() => {
+    if (status === 'loading') return;
 
-    setItemToDelete(item);
-    setDeleteModalOpen(true);
-  };
+    if (!session?.user?.id) {
+      redirect('/');
+      return;
+    }
 
-  const confirmDelete = async () => {
+    fetchUserItems();
+  }, [session, status, fetchUserItems]);
+
+  const handleItemDelete = useCallback(
+    async (itemId: string) => {
+      const item = items.find((item) => item.id === itemId);
+      if (!item) return;
+
+      setItemToDelete(item);
+      setDeleteModalOpen(true);
+    },
+    [items]
+  );
+
+  const confirmDelete = useCallback(async () => {
     if (!itemToDelete) return;
 
     try {
@@ -117,34 +109,34 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error deleting item:', error);
     }
-  };
+  }, [itemToDelete, items]);
 
-  const handleStatusChange = async (
-    itemId: string,
-    newStatus: 'AVAILABLE' | 'PENDING' | 'TAKEN'
-  ) => {
-    try {
-      const response = await fetch(`/api/items/${itemId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+  const handleStatusChange = useCallback(
+    async (itemId: string, newStatus: ItemStatus) => {
+      try {
+        const response = await fetch(`/api/items/${itemId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
 
-      if (response.ok) {
-        setItems(
-          items.map((item) =>
-            item.id === itemId ? { ...item, status: newStatus } : item
-          )
-        );
-      } else {
-        console.error('Failed to update item status');
+        if (response.ok) {
+          setItems(
+            items.map((item) =>
+              item.id === itemId ? { ...item, status: newStatus } : item
+            )
+          );
+        } else {
+          console.error('Failed to update item status');
+        }
+      } catch (error) {
+        console.error('Error updating item status:', error);
       }
-    } catch (error) {
-      console.error('Error updating item status:', error);
-    }
-  };
+    },
+    [items]
+  );
 
   if (status === 'loading' || loading) {
     return (
@@ -197,26 +189,7 @@ export default function DashboardPage() {
   const takenItems = items.filter((item) => item.status === 'TAKEN');
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/"
-              className="text-2xl font-bold hover:opacity-80 transition-opacity"
-            >
-              Freebox
-            </Link>
-            <p className="text-muted-foreground">Everything is free</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <LoginBtn />
-            <ModeToggle />
-          </div>
-        </div>
-      </header>
-
+    <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">My Dashboard</h1>
@@ -368,6 +341,6 @@ export default function DashboardPage() {
         description="This action cannot be undone."
         itemName={itemToDelete?.title}
       />
-    </div>
+    </Layout>
   );
 }

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { useGetItemsQuery } from './itemsApi';
-import type { GetItemsParams, Item } from './itemsApi';
+import type { GetItemsParams, Item } from '@/types';
 
 interface UseItemsReturn {
   items: Item[];

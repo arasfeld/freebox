@@ -16,6 +16,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -25,7 +26,7 @@ import { LocationPicker } from '@/components/location-picker';
 import { SortOptions } from '@/components/sort-options';
 
 import {
-  clearFilters,
+  resetFilters,
   setCategory,
   setLocation,
   setSearch,
@@ -34,23 +35,23 @@ import {
 } from '@/lib/features/search/searchSlice';
 import {
   selectHasActiveFilters,
-  selectSearchFilters,
+  selectFilters,
   selectSortBy,
 } from '@/lib/features/search/searchSelectors';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 
-import { CATEGORIES, LOCATIONS } from '@/types/search';
+import { CATEGORIES } from '@/types/search';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Status' },
   { value: 'AVAILABLE', label: 'Available' },
-  { value: 'PENDING', label: 'Pending Interest' },
+  { value: 'PENDING', label: 'Pending' },
   { value: 'TAKEN', label: 'Taken' },
-];
+] as const;
 
 export function SearchFilters() {
   const dispatch = useAppDispatch();
-  const filters = useAppSelector(selectSearchFilters);
+  const filters = useAppSelector(selectFilters);
   const sortBy = useAppSelector(selectSortBy);
   const hasActiveFilters = useAppSelector(selectHasActiveFilters);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -59,7 +60,7 @@ export function SearchFilters() {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === 'Escape' && hasActiveFilters) {
-        dispatch(clearFilters());
+        dispatch(resetFilters());
       }
     },
     [dispatch, hasActiveFilters]
@@ -75,16 +76,6 @@ export function SearchFilters() {
       CATEGORIES.map((category) => (
         <SelectItem key={category} value={category}>
           {category}
-        </SelectItem>
-      )),
-    []
-  );
-
-  const locationOptions = useMemo(
-    () =>
-      LOCATIONS.map((location) => (
-        <SelectItem key={location} value={location}>
-          {location}
         </SelectItem>
       )),
     []
@@ -120,6 +111,9 @@ export function SearchFilters() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Search Filters</DialogTitle>
+            <DialogDescription>
+              Filter items by category, location, status, and sort order.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4">
@@ -145,18 +139,13 @@ export function SearchFilters() {
                 <label className="text-sm font-medium mb-2 block">
                   Location
                 </label>
-                <Select
-                  value={filters.location}
-                  onValueChange={(value) => dispatch(setLocation(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Locations" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Locations</SelectItem>
-                    {locationOptions}
-                  </SelectContent>
-                </Select>
+                <Input
+                  placeholder="Enter location to filter by..."
+                  value={filters.location === 'all' ? '' : filters.location}
+                  onChange={(e) =>
+                    dispatch(setLocation(e.target.value || 'all'))
+                  }
+                />
               </div>
 
               <div>
@@ -189,28 +178,31 @@ export function SearchFilters() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  dispatch(clearFilters());
-                  setIsDialogOpen(false);
-                }}
-                disabled={!hasActiveFilters}
-              >
-                Clear Filters
-              </Button>
-              <div className="text-sm text-muted-foreground">
-                {hasActiveFilters && (
-                  <span>
-                    Press <Kbd>Esc</Kbd> to clear
-                  </span>
-                )}
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <div className="pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    dispatch(resetFilters());
+                    setIsDialogOpen(false);
+                  }}
+                  className="w-full"
+                >
+                  Clear All Filters
+                </Button>
               </div>
-            </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Keyboard Shortcut Hint */}
+      {hasActiveFilters && (
+        <div className="text-xs text-muted-foreground">
+          Press <Kbd>Esc</Kbd> to clear filters
+        </div>
+      )}
     </div>
   );
 }

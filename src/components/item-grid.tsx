@@ -7,21 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+import { selectUserLocation } from '@/lib/features/search/searchSelectors';
 import { useSearch } from '@/lib/features/search/useSearch';
 import { useAppSelector } from '@/lib/hooks';
-import { selectUserLocation } from '@/lib/features/search/searchSelectors';
 import { getItemDistance } from '@/lib/utils';
 
-import type { Item } from '@/lib/features/items/itemsApi';
+import type { ItemWithDistance } from '@/types';
 
 export function ItemGrid() {
-  const { items, isLoading, isError, error, sortBy, hasActiveFilters } =
-    useSearch();
+  const { items, isLoading, isError, sortBy, hasActiveFilters } = useSearch();
 
   const userLocation = useAppSelector(selectUserLocation);
 
   const sortItems = useCallback(
-    (itemsToSort: Item[]): Item[] => {
+    (itemsToSort: ItemWithDistance[]): ItemWithDistance[] => {
       const sortedItems = [...itemsToSort];
 
       switch (sortBy) {
@@ -40,10 +39,6 @@ export function ItemGrid() {
         case 'category':
           return sortedItems.sort((a, b) =>
             (a.category || '').localeCompare(b.category || '')
-          );
-        case 'location':
-          return sortedItems.sort((a, b) =>
-            (a.location || '').localeCompare(b.location || '')
           );
         case 'distance':
           if (
@@ -146,12 +141,9 @@ export function ItemGrid() {
   if (isError) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-600 mb-4">
-          {error && typeof error === 'object' && 'data' in error
-            ? 'An error occurred while fetching items'
-            : 'Failed to fetch items'}
+        <p className="text-muted-foreground">
+          Error loading items. Please try again later.
         </p>
-        <Button onClick={() => window.location.reload()}>Try Again</Button>
       </div>
     );
   }

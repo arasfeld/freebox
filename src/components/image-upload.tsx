@@ -71,10 +71,13 @@ export function ImageUpload({
     disabled: uploading || images.length >= maxImages,
   });
 
-  const removeImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index);
-    onImagesChange(newImages);
-  };
+  const removeImage = useCallback(
+    (index: number) => {
+      const newImages = images.filter((_, i) => i !== index);
+      onImagesChange(newImages);
+    },
+    [images, onImagesChange]
+  );
 
   return (
     <div className="space-y-4">
