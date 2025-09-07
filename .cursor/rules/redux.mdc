@@ -1,0 +1,436 @@
+# Redux Toolkit Rules
+
+## Store Organization
+
+- Use feature-based organization with Redux Toolkit
+- Keep slices focused and single-purpose
+- Use proper TypeScript types for state and actions
+- Implement proper error handling in async thunks
+- Use RTK Query for API calls when appropriate
+
+## Slice Patterns
+
+- Use `createSlice` for synchronous state updates
+- Use `createAsyncThunk` for async operations
+- Implement proper loading states
+- Use immer for immutable updates
+- Keep reducers pure and predictable
+
+## State Structure
+
+- Normalize complex data structures
+- Use proper selectors for derived state
+- Implement proper caching strategies
+- Keep state minimal and focused
+
+## Example Store Setup
+
+```typescript
+// src/lib/store.ts
+import { configureStore } from '@reduxjs/toolkit';
+import { searchSlice } from './features/search/searchSlice';
+
+export const store = configureStore({
+  reducer: {
+    search: searchSlice.reducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST'],
+      },
+    }),
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+```
+
+## Example Slice Implementation
+
+```typescript
+// src/lib/features/search/searchSlice.ts
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { SearchFilters, SearchResults } from '@/types';
+
+interface SearchState {
+  filters: SearchFilters;
+  results: SearchResults | null;
+  loading: boolean;
+  error: string | null;
+  lastSearch: string | null;
+}
+
+const initialState: SearchState = {
+  filters: {
+    query: '',
+    category: '',
+    location: '',
+    radius: 10,
+    sortBy: 'distance',
+  },
+  results: null,
+  loading: false,
+  error: null,
+  lastSearch: null,
+};
+
+// Async thunk for search
+export const performSearch = createAsyncThunk(
+  'search/performSearch',
+  async (filters: SearchFilters, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/items/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(filters),
+      });
+
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : 'Search failed'
+      );
+    }
+  }
+);
+
+const searchSlice = createSlice({
+  name: 'search',
+  initialState,
+  reducers: {
+    updateFilters: (state, action: PayloadAction<Partial<SearchFilters>>) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    clearFilters: (state) => {
+      state.filters = initialState.filters;
+    },
+    clearResults: (state) => {
+      state.results = null;
+      state.error = null;
+    },
+    setSortBy: (state, action: PayloadAction<string>) => {
+      state.filters.sortBy = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(performSearch.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(performSearch.fulfilled, (state, action) => {
+        state.loading = false;
+        state.results = action.payload;
+        state.lastSearch = state.filters.query;
+      })
+      .addCase(performSearch.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+  },
+});
+
+export const { updateFilters, clearFilters, clearResults, setSortBy } =
+  searchSlice.actions;
+export default searchSlice.reducer;
+```
+
+## Selectors
+
+```typescript
+// src/lib/features/search/searchSelectors.ts
+import { createSelector } from '@reduxjs/toolkit';
+import { RootState } from '@/lib/store';
+
+// Basic selectors
+export const selectSearchState = (state: RootState) => state.search;
+export const selectFilters = (state: RootState) => state.search.filters;
+export const selectResults = (state: RootState) => state.search.results;
+export const selectLoading = (state: RootState) => state.search.loading;
+export const selectError = (state: RootState) => state.search.error;
+
+// Derived selectors
+export const selectHasResults = createSelector(
+  [selectResults],
+  (results) => results !== null && results.items.length > 0
+);
+
+export const selectFilteredResults = createSelector(
+  [selectResults, selectFilters],
+  (results, filters) => {
+    if (!results) return [];
+
+    let filtered = results.items;
+
+    // Apply category filter
+    if (filters.category) {
+      filtered = filtered.filter((item) => item.category === filters.category);
+    }
+
+    // Apply status filter
+    if (filters.status) {
+      filtered = filtered.filter((item) => item.status === filters.status);
+    }
+
+    return filtered;
+  }
+);
+
+export const selectSortedResults = createSelector(
+  [selectFilteredResults, selectFilters],
+  (items, filters) => {
+    const sorted = [...items];
+
+    switch (filters.sortBy) {
+      case 'distance':
+        return sorted.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+      case 'date':
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      case 'title':
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      default:
+        return sorted;
+    }
+  }
+);
+```
+
+## Custom Hooks
+
+```typescript
+// src/lib/features/search/useSearch.ts
+import { useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/lib/store';
+import {
+  performSearch,
+  updateFilters,
+  clearFilters,
+  clearResults,
+  setSortBy,
+} from './searchSlice';
+import {
+  selectFilters,
+  selectResults,
+  selectLoading,
+  selectError,
+  selectHasResults,
+  selectSortedResults,
+} from './searchSelectors';
+import { SearchFilters } from '@/types';
+
+export function useSearch() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Selectors
+  const filters = useSelector(selectFilters);
+  const results = useSelector(selectResults);
+  const loading = useSelector(selectLoading);
+  const error = useSelector(selectError);
+  const hasResults = useSelector(selectHasResults);
+  const sortedResults = useSelector(selectSortedResults);
+
+  // Actions
+  const search = useCallback(
+    (searchFilters?: Partial<SearchFilters>) => {
+      const finalFilters = searchFilters
+        ? { ...filters, ...searchFilters }
+        : filters;
+      dispatch(performSearch(finalFilters));
+    },
+    [dispatch, filters]
+  );
+
+  const updateSearchFilters = useCallback(
+    (newFilters: Partial<SearchFilters>) => {
+      dispatch(updateFilters(newFilters));
+    },
+    [dispatch]
+  );
+
+  const clearSearchFilters = useCallback(() => {
+    dispatch(clearFilters());
+  }, [dispatch]);
+
+  const clearSearchResults = useCallback(() => {
+    dispatch(clearResults());
+  }, [dispatch]);
+
+  const changeSortBy = useCallback(
+    (sortBy: string) => {
+      dispatch(setSortBy(sortBy));
+    },
+    [dispatch]
+  );
+
+  return {
+    // State
+    filters,
+    results,
+    loading,
+    error,
+    hasResults,
+    sortedResults,
+
+    // Actions
+    search,
+    updateSearchFilters,
+    clearSearchFilters,
+    clearSearchResults,
+    changeSortBy,
+  };
+}
+```
+
+## Store Provider
+
+```typescript
+// src/app/StoreProvider.tsx
+'use client';
+
+import { Provider } from 'react-redux';
+import { store } from '@/lib/store';
+
+export function StoreProvider({ children }: { children: React.ReactNode }) {
+  return <Provider store={store}>{children}</Provider>;
+}
+```
+
+## Component Usage
+
+```typescript
+// src/components/search-filters.tsx
+'use client';
+
+import { useSearch } from '@/lib/features/search/useSearch';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
+
+export function SearchFilters() {
+  const { filters, loading, updateSearchFilters, search, clearSearchFilters } =
+    useSearch();
+
+  const handleSearch = () => {
+    search();
+  };
+
+  const handleClear = () => {
+    clearSearchFilters();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Input
+          placeholder="Search items..."
+          value={filters.query}
+          onChange={(e) => updateSearchFilters({ query: e.target.value })}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+        />
+
+        <Select
+          value={filters.category}
+          onValueChange={(value) => updateSearchFilters({ category: value })}
+        >
+          <option value="">All Categories</option>
+          <option value="electronics">Electronics</option>
+          <option value="furniture">Furniture</option>
+          <option value="clothing">Clothing</option>
+        </Select>
+
+        <Input
+          placeholder="Location"
+          value={filters.location}
+          onChange={(e) => updateSearchFilters({ location: e.target.value })}
+        />
+      </div>
+
+      <div className="flex gap-2">
+        <Button onClick={handleSearch} disabled={loading}>
+          {loading ? 'Searching...' : 'Search'}
+        </Button>
+        <Button variant="outline" onClick={handleClear}>
+          Clear
+        </Button>
+      </div>
+    </div>
+  );
+}
+```
+
+## RTK Query Example
+
+```typescript
+// src/lib/features/items/itemsApi.ts
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { Item, CreateItemData, UpdateItemData } from '@/types';
+
+export const itemsApi = createApi({
+  reducerPath: 'itemsApi',
+  baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+  tagTypes: ['Item'],
+  endpoints: (builder) => ({
+    getItems: builder.query<Item[], void>({
+      query: () => 'items',
+      providesTags: ['Item'],
+    }),
+
+    getItemById: builder.query<Item, string>({
+      query: (id) => `items/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Item', id }],
+    }),
+
+    createItem: builder.mutation<Item, CreateItemData>({
+      query: (data) => ({
+        url: 'items',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Item'],
+    }),
+
+    updateItem: builder.mutation<Item, { id: string; data: UpdateItemData }>({
+      query: ({ id, data }) => ({
+        url: `items/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Item', id }],
+    }),
+
+    deleteItem: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `items/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Item'],
+    }),
+  }),
+});
+
+export const {
+  useGetItemsQuery,
+  useGetItemByIdQuery,
+  useCreateItemMutation,
+  useUpdateItemMutation,
+  useDeleteItemMutation,
+} = itemsApi;
+```
+
+description:
+globs:
+alwaysApply: true
+
+---

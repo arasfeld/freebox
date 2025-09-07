@@ -1,0 +1,209 @@
+# React 19 Rules
+
+## Component Structure
+
+- Use functional components with hooks
+- Prefer named exports over default exports for components
+- Use TypeScript interfaces for component props
+- Keep components focused and single-purpose
+- Use proper prop destructuring with default values
+
+## Hooks Best Practices
+
+- Follow the Rules of Hooks (only call at top level, only in React functions)
+- Use custom hooks for reusable logic
+- Prefer `useState` for simple state, `useReducer` for complex state
+- Use `useCallback` for event handlers passed to child components
+- Use `useMemo` for expensive calculations
+- Use `useEffect` for side effects with proper cleanup
+
+## State Management
+
+- Use local state (`useState`) for component-specific state
+- Use Redux Toolkit for global state management
+- Use React Context sparingly and only for truly global state
+- Prefer composition over prop drilling
+
+## Performance Optimization
+
+- Use `React.memo` for expensive components that receive stable props
+- Use `useCallback` and `useMemo` judiciously
+- Avoid creating objects/functions in render
+- Use proper key props for lists
+- Implement proper error boundaries
+
+## Component Patterns
+
+- Use compound components for complex UI patterns
+- Implement render props or children functions when needed
+- Use forwardRef for components that need ref forwarding
+- Use proper TypeScript generics for flexible components
+
+## Example Component Structure
+
+```typescript
+import { useState, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+
+interface ItemCardProps {
+  item: Item;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  className?: string;
+}
+
+export function ItemCard({ item, onEdit, onDelete, className }: ItemCardProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleEdit = useCallback(() => {
+    onEdit?.(item.id);
+  }, [item.id, onEdit]);
+
+  const handleDelete = useCallback(async () => {
+    if (!onDelete) return;
+
+    setIsLoading(true);
+    try {
+      await onDelete(item.id);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [item.id, onDelete]);
+
+  return (
+    <Card className={className}>
+      <h3>{item.title}</h3>
+      <p>{item.description}</p>
+      <div className="flex gap-2">
+        <Button onClick={handleEdit} variant="outline" size="sm">
+          Edit
+        </Button>
+        <Button
+          onClick={handleDelete}
+          variant="destructive"
+          size="sm"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Deleting...' : 'Delete'}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+```
+
+## Custom Hook Example
+
+```typescript
+// src/lib/hooks/useItems.ts
+import { useState, useCallback, useEffect } from 'react';
+import { itemsApi } from '@/lib/features/items/itemsApi';
+
+interface UseItemsOptions {
+  category?: string;
+  status?: ItemStatus;
+}
+
+export function useItems(options: UseItemsOptions = {}) {
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchItems = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await itemsApi.getItems(options);
+      setItems(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch items');
+    } finally {
+      setLoading(false);
+    }
+  }, [options]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  const addItem = useCallback(async (itemData: CreateItemData) => {
+    try {
+      const newItem = await itemsApi.createItem(itemData);
+      setItems((prev) => [...prev, newItem]);
+      return newItem;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create item');
+      throw err;
+    }
+  }, []);
+
+  return {
+    items,
+    loading,
+    error,
+    refetch: fetchItems,
+    addItem,
+  };
+}
+```
+
+## Error Boundary Example
+
+```typescript
+// src/components/error-boundary.tsx
+'use client';
+
+import { Component, ReactNode } from 'react';
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error?: Error;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        this.props.fallback || (
+          <div className="p-4 text-center">
+            <h2>Something went wrong</h2>
+            <button
+              onClick={() => this.setState({ hasError: false })}
+              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Try again
+            </button>
+          </div>
+        )
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+description:
+globs:
+alwaysApply: true
+
+---

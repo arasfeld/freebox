@@ -1,0 +1,249 @@
+# Project Rules
+
+## Code Organization
+
+- Use feature-based folder structure
+- Keep related files close together
+- Use consistent naming conventions
+- Separate concerns properly
+- Use barrel exports for clean imports
+
+## File Naming Conventions
+
+- Use kebab-case for file and folder names
+- Use PascalCase for component files
+- Use camelCase for utility files
+- Use descriptive names that indicate purpose
+- Group related files in appropriate directories
+
+## Import Organization
+
+- Group imports: external packages first, then internal modules
+- Use absolute imports with `@/` prefix for internal modules
+- Use relative imports for closely related files
+- Alphabetize imports within groups
+- Remove unused imports
+
+## Code Style
+
+- Use TypeScript for all new files
+- Prefer const over let, avoid var
+- Use meaningful variable and function names
+- Keep functions small and focused
+- Use proper indentation and spacing
+- Add JSDoc comments for complex functions
+
+## Error Handling
+
+- Use proper try-catch blocks
+- Implement meaningful error messages
+- Use custom error classes when appropriate
+- Handle errors at the appropriate level
+- Log errors for debugging
+
+## Performance
+
+- Optimize bundle size
+- Use proper caching strategies
+- Implement lazy loading when appropriate
+- Use React.memo for expensive components
+- Avoid unnecessary re-renders
+
+## Security
+
+- Validate all user inputs
+- Use proper authentication and authorization
+- Sanitize data before storing
+- Use HTTPS in production
+- Keep dependencies updated
+
+## Testing
+
+- Write unit tests for business logic
+- Test error scenarios
+- Use meaningful test descriptions
+- Keep tests focused and isolated
+- Use proper mocking strategies
+
+## Documentation
+
+- Document complex business logic
+- Keep README files updated
+- Use JSDoc for public APIs
+- Document environment variables
+- Maintain changelog
+
+## Git Workflow
+
+- Use descriptive commit messages
+- Keep commits focused and atomic
+- Use feature branches for new development
+- Review code before merging
+- Use conventional commit format
+
+## Environment Configuration
+
+- Use environment variables for configuration
+- Never commit secrets to version control
+- Use .env.local for local development
+- Document required environment variables
+- Use proper validation for env vars
+
+## Example File Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes
+│   ├── dashboard/         # Dashboard pages
+│   └── layout.tsx         # Root layout
+├── components/            # Reusable components
+│   ├── ui/               # Base UI components
+│   └── features/         # Feature-specific components
+├── lib/                  # Utilities and configurations
+│   ├── features/         # Feature-specific logic
+│   ├── hooks/            # Custom React hooks
+│   └── utils/            # Utility functions
+├── types/                # TypeScript type definitions
+└── styles/               # Global styles
+```
+
+## Example Import Organization
+
+```typescript
+// External packages (alphabetically ordered)
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+
+// Internal modules (alphabetically ordered)
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { ItemsService } from '@/lib/features/items/itemsService';
+import type { Item, User } from '@/types';
+```
+
+## Example Error Handling
+
+```typescript
+// Custom error classes
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public statusCode: number = 500
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+
+// Proper error handling
+export async function handleApiCall<T>(
+  apiCall: () => Promise<T>
+): Promise<{ data: T | null; error: string | null }> {
+  try {
+    const data = await apiCall();
+    return { data, error: null };
+  } catch (error) {
+    console.error('API call failed:', error);
+
+    if (error instanceof AppError) {
+      return { data: null, error: error.message };
+    }
+
+    return { data: null, error: 'An unexpected error occurred' };
+  }
+}
+```
+
+## Example Component Structure
+
+```typescript
+import { useState, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { useItems } from '@/lib/hooks/useItems';
+import type { Item } from '@/types';
+
+interface ItemListProps {
+  category?: string;
+  onItemSelect?: (item: Item) => void;
+}
+
+export function ItemList({ category, onItemSelect }: ItemListProps) {
+  const { items, loading, error } = useItems({ category });
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+
+  const handleItemClick = useCallback(
+    (item: Item) => {
+      setSelectedItem(item);
+      onItemSelect?.(item);
+    },
+    [onItemSelect]
+  );
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  return (
+    <div className="grid gap-4">
+      {items.map((item) => (
+        <div
+          key={item.id}
+          onClick={() => handleItemClick(item)}
+          className="cursor-pointer"
+        >
+          <h3>{item.title}</h3>
+          <p>{item.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## Environment Variables Example
+
+```typescript
+// src/lib/env.ts
+import { z } from 'zod';
+
+const envSchema = z.object({
+  DATABASE_URL: z.string().url(),
+  NEXTAUTH_SECRET: z.string().min(1),
+  NEXTAUTH_URL: z.string().url(),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
+});
+
+export const env = envSchema.parse(process.env);
+```
+
+## Git Commit Message Format
+
+```
+type(scope): description
+
+[optional body]
+
+[optional footer]
+```
+
+Examples:
+
+- `feat(auth): add Google OAuth provider`
+- `fix(items): resolve image upload issue`
+- `docs(readme): update installation instructions`
+- `refactor(components): extract reusable button component`
+  description:
+  globs:
+  alwaysApply: true
+
+---

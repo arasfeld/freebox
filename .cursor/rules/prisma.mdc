@@ -1,0 +1,412 @@
+# Prisma Rules
+
+## Schema Design
+
+- Use descriptive model and field names
+- Implement proper relationships with foreign keys
+- Use enums for status fields and categories
+- Add proper indexes for performance
+- Use appropriate field types (String, Int, Float, DateTime, Boolean, Json)
+- Implement soft deletes when needed
+- Use proper constraints and validations
+
+## Database Operations
+
+- Use Prisma Client for all database operations
+- Implement proper error handling for database operations
+- Use transactions for operations that modify multiple records
+- Implement proper pagination for large datasets
+- Use include and select for efficient queries
+- Implement proper caching strategies
+
+## Migration Best Practices
+
+- Always review migrations before applying
+- Use descriptive migration names
+- Test migrations on development data
+- Back up production data before migrations
+- Use proper rollback strategies
+
+## Example Schema Patterns
+
+```prisma
+// prisma/schema.prisma
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+
+  // Contact Information
+  phone         String?
+  preferredContact String? // "email", "phone", "both"
+
+  // Address Information
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  latitude      Float?    // For geocoding
+  longitude     Float?    // For geocoding
+
+  // Pickup Preferences
+  pickupInstructions String?
+  availableHours     String?
+  preferredPickupMethod String?
+
+  // Relations
+  accounts     Account[]
+  sessions     Session[]
+  items        Item[]
+  interests    ItemInterest[]
+
+  // Timestamps
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Item {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  images      String[]   // Array of image URLs
+  category    String?
+  location    String?
+  latitude    Float?     // Latitude coordinate
+  longitude   Float?     // Longitude coordinate
+  status      ItemStatus @default(AVAILABLE)
+
+  // Relations
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interests   ItemInterest[]
+
+  // Timestamps
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Indexes for performance
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([latitude, longitude])
+  @@map("items")
+}
+
+model ItemInterest {
+  id         String   @id @default(cuid())
+
+  // Relations
+  itemId     String
+  userId     String
+  item       Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Interest data
+  timestamp  DateTime @default(now())
+  selected   Boolean  @default(false)
+  userStats  Json     // Store user stats as JSON
+
+  // Timestamps
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Unique constraint
+  @@unique([itemId, userId])
+  @@index([userId])
+  @@index([itemId])
+  @@map("item_interests")
+}
+
+enum ItemStatus {
+  AVAILABLE
+  PENDING
+  TAKEN
+}
+```
+
+## Database Operations Examples
+
+```typescript
+// src/lib/prisma.ts
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+```
+
+```typescript
+// src/lib/features/items/itemsService.ts
+import { prisma } from '@/lib/prisma';
+import { CreateItemData, UpdateItemData } from '@/types';
+
+export class ItemsService {
+  static async createItem(data: CreateItemData, userId: string) {
+    return await prisma.item.create({
+      data: {
+        ...data,
+        userId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+      },
+    });
+  }
+
+  static async getItems(options: {
+    category?: string;
+    status?: string;
+    userId?: string;
+    page?: number;
+    limit?: number;
+    latitude?: number;
+    longitude?: number;
+    radius?: number;
+  }) {
+    const {
+      category,
+      status,
+      userId,
+      page = 1,
+      limit = 20,
+      latitude,
+      longitude,
+      radius,
+    } = options;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (category) where.category = category;
+    if (status) where.status = status;
+    if (userId) where.userId = userId;
+
+    // Add geospatial filtering if coordinates provided
+    if (latitude && longitude && radius) {
+      where.AND = [
+        { latitude: { gte: latitude - radius } },
+        { latitude: { lte: latitude + radius } },
+        { longitude: { gte: longitude - radius } },
+        { longitude: { lte: longitude + radius } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      prisma.item.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+          _count: {
+            select: {
+              interests: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.item.count({ where }),
+    ]);
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  static async getItemById(id: string) {
+    return await prisma.item.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            phone: true,
+            preferredContact: true,
+            address: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            pickupInstructions: true,
+            availableHours: true,
+            preferredPickupMethod: true,
+          },
+        },
+        interests: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        _count: {
+          select: {
+            interests: true,
+          },
+        },
+      },
+    });
+  }
+
+  static async updateItem(id: string, data: UpdateItemData) {
+    return await prisma.item.update({
+      where: { id },
+      data,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+      },
+    });
+  }
+
+  static async deleteItem(id: string) {
+    return await prisma.item.delete({
+      where: { id },
+    });
+  }
+
+  static async addInterest(itemId: string, userId: string, userStats: any) {
+    return await prisma.itemInterest.create({
+      data: {
+        itemId,
+        userId,
+        userStats,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+      },
+    });
+  }
+
+  static async removeInterest(itemId: string, userId: string) {
+    return await prisma.itemInterest.delete({
+      where: {
+        itemId_userId: {
+          itemId,
+          userId,
+        },
+      },
+    });
+  }
+}
+```
+
+## Transaction Examples
+
+```typescript
+// src/lib/features/items/itemsService.ts
+static async transferItem(itemId: string, fromUserId: string, toUserId: string) {
+  return await prisma.$transaction(async (tx) => {
+    // Update item ownership
+    const updatedItem = await tx.item.update({
+      where: { id: itemId },
+      data: { userId: toUserId },
+    });
+
+    // Remove all existing interests
+    await tx.itemInterest.deleteMany({
+      where: { itemId },
+    });
+
+    // Create new interest for the new owner
+    await tx.itemInterest.create({
+      data: {
+        itemId,
+        userId: toUserId,
+        selected: true,
+        userStats: {},
+      },
+    });
+
+    return updatedItem;
+  });
+}
+```
+
+## Error Handling
+
+```typescript
+// src/lib/utils/prisma-error-handling.ts
+import { Prisma } from '@prisma/client';
+
+export function handlePrismaError(error: unknown): never {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    switch (error.code) {
+      case 'P2002':
+        throw new Error('A record with this unique field already exists');
+      case 'P2025':
+        throw new Error('Record not found');
+      case 'P2003':
+        throw new Error('Foreign key constraint failed');
+      default:
+        throw new Error(`Database error: ${error.message}`);
+    }
+  }
+
+  if (error instanceof Prisma.PrismaClientValidationError) {
+    throw new Error(`Validation error: ${error.message}`);
+  }
+
+  throw error;
+}
+```
+
+description:
+globs:
+alwaysApply: true
+
+---

@@ -1,0 +1,293 @@
+# TypeScript Rules
+
+## Type Safety
+
+- Use strict TypeScript configuration
+- Prefer interfaces over types for object shapes
+- Use type unions for discriminated unions
+- Avoid `any` type - use `unknown` or proper types
+- Use generic types for reusable components and functions
+- Implement proper error handling with typed errors
+
+## Type Definitions
+
+- Define types in separate files under `src/types/`
+- Use descriptive type names
+- Export types from index files for easy imports
+- Use branded types for domain-specific values
+- Implement proper type guards for runtime type checking
+
+## Code Organization
+
+- Use barrel exports (index.ts files) for clean imports
+- Organize imports: external packages first, then internal modules
+- Use absolute imports with `@/` prefix for internal modules
+- Keep files focused and single-purpose
+- Use proper file naming conventions
+
+## API and Data Types
+
+- Define types for all API requests and responses
+- Use Zod for runtime validation with TypeScript integration
+- Implement proper error types for different scenarios
+- Use branded types for IDs and other domain values
+
+## Example Type Definitions
+
+```typescript
+// src/types/index.ts
+export interface User {
+  id: UserId;
+  name: string;
+  email: Email;
+  image?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Item {
+  id: ItemId;
+  title: string;
+  description?: string;
+  images: string[];
+  category?: string;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
+  status: ItemStatus;
+  userId: UserId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type ItemStatus = 'AVAILABLE' | 'PENDING' | 'TAKEN';
+
+// Branded types for type safety
+export type UserId = string & { readonly brand: unique symbol };
+export type ItemId = string & { readonly brand: unique symbol };
+export type Email = string & { readonly brand: unique symbol };
+
+// API types
+export interface CreateItemRequest {
+  title: string;
+  description?: string;
+  category?: string;
+  location?: string;
+  images?: File[];
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  message?: string;
+}
+
+export interface ApiError {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+```
+
+## Generic Components Example
+
+```typescript
+// src/components/data-table.tsx
+import { useState, useMemo } from 'react';
+
+interface Column<T> {
+  key: keyof T;
+  header: string;
+  render?: (value: T[keyof T], item: T) => React.ReactNode;
+  sortable?: boolean;
+}
+
+interface DataTableProps<T> {
+  data: T[];
+  columns: Column<T>[];
+  onRowClick?: (item: T) => void;
+  className?: string;
+}
+
+export function DataTable<T extends Record<string, any>>({
+  data,
+  columns,
+  onRowClick,
+  className,
+}: DataTableProps<T>) {
+  const [sortKey, setSortKey] = useState<keyof T | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const sortedData = useMemo(() => {
+    if (!sortKey) return data;
+
+    return [...data].sort((a, b) => {
+      const aVal = a[sortKey];
+      const bVal = b[sortKey];
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [data, sortKey, sortDirection]);
+
+  const handleSort = (key: keyof T) => {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
+  return (
+    <table className={className}>
+      <thead>
+        <tr>
+          {columns.map((column) => (
+            <th
+              key={String(column.key)}
+              onClick={() => column.sortable && handleSort(column.key)}
+              className={column.sortable ? 'cursor-pointer' : ''}
+            >
+              {column.header}
+              {sortKey === column.key && (
+                <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+              )}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {sortedData.map((item, index) => (
+          <tr
+            key={index}
+            onClick={() => onRowClick?.(item)}
+            className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}
+          >
+            {columns.map((column) => (
+              <td key={String(column.key)}>
+                {column.render
+                  ? column.render(item[column.key], item)
+                  : String(item[column.key] ?? '')}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+```
+
+## Type Guards Example
+
+```typescript
+// src/lib/utils/type-guards.ts
+import { User, Item, ApiError } from '@/types';
+
+export function isUser(value: unknown): value is User {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'name' in value &&
+    'email' in value
+  );
+}
+
+export function isItem(value: unknown): value is Item {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'title' in value &&
+    'status' in value
+  );
+}
+
+export function isApiError(value: unknown): value is ApiError {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'code' in value &&
+    'message' in value
+  );
+}
+
+// Zod schema for runtime validation
+import { z } from 'zod';
+
+export const userSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  image: z.string().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const itemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  images: z.array(z.string()),
+  category: z.string().optional(),
+  location: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  status: z.enum(['AVAILABLE', 'PENDING', 'TAKEN']),
+  userId: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+```
+
+## Error Handling with Types
+
+```typescript
+// src/lib/utils/error-handling.ts
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public statusCode: number = 500,
+    public details?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super(message, 'VALIDATION_ERROR', 400, details);
+    this.name = 'ValidationError';
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(resource: string) {
+    super(`${resource} not found`, 'NOT_FOUND', 404);
+    this.name = 'NotFoundError';
+  }
+}
+
+export function handleApiError(error: unknown): AppError {
+  if (error instanceof AppError) {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return new AppError(error.message, 'UNKNOWN_ERROR');
+  }
+
+  return new AppError('An unknown error occurred', 'UNKNOWN_ERROR');
+}
+```
+
+description:
+globs:
+alwaysApply: true
+
+---
