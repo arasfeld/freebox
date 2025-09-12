@@ -2,3 +2,4 @@
 export * from './database';
 export * from './location';
 export * from './search';
+export * from './user';

@@ -240,10 +240,12 @@ export default function EditItemPage({
                 <Label htmlFor="title">Title *</Label>
                 <Input
                   id="title"
+                  name="title"
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   placeholder="Enter item title"
                   required
+                  autoComplete="off"
                 />
               </div>
 
@@ -251,12 +253,14 @@ export default function EditItemPage({
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
+                  name="description"
                   value={formData.description}
                   onChange={(e) =>
                     handleInputChange('description', e.target.value)
                   }
                   placeholder="Describe your item"
                   rows={4}
+                  autoComplete="off"
                 />
               </div>
 

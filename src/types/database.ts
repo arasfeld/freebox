@@ -118,6 +118,11 @@ export interface GetItemsParams {
   category?: string;
   location?: string;
   status?: string;
+  sortBy?: string;
+  userLat?: number;
+  userLng?: number;
+  radiusKm?: number;
+  distanceUnit?: string;
 }
 
 export interface ExpressInterestRequest {

@@ -193,10 +193,12 @@ export default function PostItemPage() {
                   <Label htmlFor="title">Title *</Label>
                   <Input
                     id="title"
+                    name="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g., Free couch in good condition"
                     required
+                    autoComplete="off"
                   />
                 </div>
 
@@ -204,10 +206,12 @@ export default function PostItemPage() {
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
+                    name="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe the item, its condition, and any relevant details..."
                     rows={4}
+                    autoComplete="off"
                   />
                 </div>
 

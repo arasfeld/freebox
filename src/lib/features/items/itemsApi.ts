@@ -28,6 +28,19 @@ export const itemsApi = createApi({
         if (params.status && params.status !== 'all') {
           searchParams.append('status', params.status);
         }
+        if (params.sortBy) {
+          searchParams.append('sortBy', params.sortBy);
+        }
+        if (params.userLat && params.userLng) {
+          searchParams.append('userLat', params.userLat.toString());
+          searchParams.append('userLng', params.userLng.toString());
+        }
+        if (params.radiusKm) {
+          searchParams.append('radiusKm', params.radiusKm.toString());
+        }
+        if (params.distanceUnit) {
+          searchParams.append('distanceUnit', params.distanceUnit);
+        }
 
         return {
           url: `items${
@@ -86,6 +99,20 @@ export const itemsApi = createApi({
         invalidatesTags: ['Items'],
       }
     ),
+    unselectRecipient: builder.mutation<ItemWithDistance, { itemId: string }>({
+      query: ({ itemId }) => ({
+        url: `items/${itemId}/select-recipient`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Items'],
+    }),
+    markAsTaken: builder.mutation<ItemWithDistance, { itemId: string }>({
+      query: ({ itemId }) => ({
+        url: `items/${itemId}/mark-taken`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Items'],
+    }),
   }),
 });
 
@@ -95,4 +122,6 @@ export const {
   useExpressInterestMutation,
   useRemoveInterestMutation,
   useSelectRecipientMutation,
+  useUnselectRecipientMutation,
+  useMarkAsTakenMutation,
 } = itemsApi;

@@ -41,7 +41,9 @@ const testItems = [
     description:
       'Excellent condition Samsung Smart TV, 32 inches. Perfect for a bedroom or small living room. Comes with remote and power cable. Upgraded to a larger TV, so this one needs a new home.',
     category: 'Electronics',
-    location: 'Downtown',
+    location: 'Downtown Cincinnati',
+    latitude: 39.1031,
+    longitude: -84.512,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059340/tv_w32ae1.jpg',
     ],
@@ -51,7 +53,9 @@ const testItems = [
     description:
       'Beautiful wooden train set with tracks, bridges, and multiple train cars. Great condition, perfect for kids aged 3-8. All pieces included and in excellent shape.',
     category: 'Toys & Games',
-    location: 'North Side',
+    location: 'West Chester',
+    latitude: 39.3297,
+    longitude: -84.4083,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059340/train-toy_emsynw.jpg',
     ],
@@ -61,7 +65,9 @@ const testItems = [
     description:
       'High-quality soccer ball, size 5. Used for a few games but still in great condition. Perfect for practice or casual games. No punctures or damage.',
     category: 'Sports',
-    location: 'South Side',
+    location: 'Mason',
+    latitude: 39.3601,
+    longitude: -84.3099,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059340/soccer-ball_jbyygm.jpg',
     ],
@@ -71,7 +77,9 @@ const testItems = [
     description:
       'Comfortable Nike running shoes, size 10. Lightly used, still have plenty of life left. Great for jogging or casual wear. Clean and well-maintained.',
     category: 'Clothing',
-    location: 'East Side',
+    location: 'Blue Ash',
+    latitude: 39.232,
+    longitude: -84.378,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059339/shoes_j4mq7c.jpg',
     ],
@@ -81,7 +89,9 @@ const testItems = [
     description:
       'Beautiful solid wood dining table, seats 6 people comfortably. Sturdy construction, perfect for family meals. Some minor wear but overall excellent condition.',
     category: 'Furniture',
-    location: 'West Side',
+    location: 'Loveland',
+    latitude: 39.2689,
+    longitude: -84.2638,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059339/table_etgyd7.jpg',
     ],
@@ -91,7 +101,9 @@ const testItems = [
     description:
       'Collection of 5 cotton t-shirts in various colors and sizes. All in good condition, perfect for everyday wear. Mix of casual and graphic tees.',
     category: 'Clothing',
-    location: 'Downtown',
+    location: 'Covington',
+    latitude: 39.0837,
+    longitude: -84.5085,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059339/tshirt_mlxvez.jpg',
     ],
@@ -101,7 +113,9 @@ const testItems = [
     description:
       'iPhone 12 in excellent condition, 128GB storage. Comes with original charger and case. Screen protector included. Upgraded to newer model.',
     category: 'Electronics',
-    location: 'Suburbs',
+    location: 'Newport',
+    latitude: 39.0914,
+    longitude: -84.4958,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059339/phone_kciixe.jpg',
     ],
@@ -111,7 +125,9 @@ const testItems = [
     description:
       'Beautiful original oil painting of a mountain landscape. Hand-painted, signed by the artist. Perfect for home decoration. Frame included.',
     category: 'Other',
-    location: 'North Side',
+    location: 'Hyde Park',
+    latitude: 39.1306,
+    longitude: -84.4233,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/painting_ddrjby.jpg',
     ],
@@ -121,7 +137,9 @@ const testItems = [
     description:
       'Dell Inspiron laptop, 15.6 inch screen, 8GB RAM, 256GB SSD. Runs Windows 10 smoothly. Perfect for work or school. Comes with charger.',
     category: 'Electronics',
-    location: 'East Side',
+    location: 'Oakley',
+    latitude: 39.1478,
+    longitude: -84.4305,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/laptop_dfqwpi.jpg',
     ],
@@ -131,7 +149,9 @@ const testItems = [
     description:
       'Professional garden tool set including shovel, rake, hoe, pruning shears, and watering can. All tools in excellent condition. Perfect for maintaining a garden.',
     category: 'Home & Garden',
-    location: 'Suburbs',
+    location: 'Montgomery',
+    latitude: 39.2281,
+    longitude: -84.3541,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/garden-tools_ymtyum.jpg',
     ],
@@ -141,7 +161,9 @@ const testItems = [
     description:
       'Large, comfortable couch perfect for a living room. Neutral color, fabric upholstery. Great condition, no stains or tears. Seats 3-4 people comfortably.',
     category: 'Furniture',
-    location: 'West Side',
+    location: 'Madeira',
+    latitude: 39.1909,
+    longitude: -84.3638,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/couch_vgylsy.jpg',
     ],
@@ -151,7 +173,9 @@ const testItems = [
     description:
       'Reliable gas-powered lawn mower, self-propelled. Well-maintained, starts easily. Perfect for medium to large yards. Recently serviced and ready to use.',
     category: 'Home & Garden',
-    location: 'South Side',
+    location: 'Mount Lookout',
+    latitude: 39.1239,
+    longitude: -84.4344,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/lawnmower_rmtk4x.jpg',
     ],
@@ -161,7 +185,9 @@ const testItems = [
     description:
       'Collection of classic novels including "Pride and Prejudice", "1984", "The Great Gatsby", and more. All hardcover editions in excellent condition.',
     category: 'Books',
-    location: 'Downtown',
+    location: 'Bellevue',
+    latitude: 39.1064,
+    longitude: -84.4788,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059338/book_ehyms8.jpg',
     ],
@@ -171,7 +197,9 @@ const testItems = [
     description:
       "Large collection of educational children's books for ages 5-12. Mix of fiction and non-fiction. Great for homeschooling or supplementing school learning.",
     category: 'Books',
-    location: 'North Side',
+    location: 'Dayton',
+    latitude: 39.1128,
+    longitude: -84.4722,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/books_yjqeh0.jpg',
     ],
@@ -181,7 +209,9 @@ const testItems = [
     description:
       'Complete collection of family board games including Monopoly, Scrabble, Clue, and more. All games have all pieces and instructions. Perfect for family game nights.',
     category: 'Toys & Games',
-    location: 'East Side',
+    location: 'Fort Thomas',
+    latitude: 39.0781,
+    longitude: -84.4483,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/board-games_lmlfmh.jpg',
     ],
@@ -191,7 +221,9 @@ const testItems = [
     description:
       'Large set of colorful building blocks for creative play. Compatible with major brands. Great for developing motor skills and creativity. All pieces included.',
     category: 'Toys & Games',
-    location: 'Suburbs',
+    location: 'Florence',
+    latitude: 38.9989,
+    longitude: -84.6266,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/blocks-toy_c5ybnd.jpg',
     ],
@@ -201,7 +233,9 @@ const testItems = [
     description:
       'Beautiful Yamaha acoustic guitar with rich sound. Perfect for beginners or intermediate players. Comes with case, tuner, and extra strings. Well-maintained.',
     category: 'Other',
-    location: 'West Side',
+    location: 'Burlington',
+    latitude: 39.0276,
+    longitude: -84.7241,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/acoustic-guitar_m9m9b5.jpg',
     ],
@@ -211,7 +245,9 @@ const testItems = [
     description:
       'Trek mountain bike in excellent condition. 21-speed, perfect for trails and city riding. Recently serviced with new tires and brakes. Helmet included.',
     category: 'Sports',
-    location: 'South Side',
+    location: 'Lawrenceburg',
+    latitude: 39.0906,
+    longitude: -84.8499,
     images: [
       'https://res.cloudinary.com/drhfkyohi/image/upload/v1756059337/bike_no6d4l.jpg',
     ],

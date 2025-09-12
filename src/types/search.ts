@@ -12,6 +12,7 @@ export interface SearchFilters {
   location: string;
   status: string;
   sortBy: SortOption;
+  radiusKm?: number;
 }
 
 // Interest types (moved from database types)

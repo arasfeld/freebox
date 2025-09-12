@@ -2,7 +2,7 @@
 
 import { signIn, signOut, useSession } from 'next-auth/react';
 
-import { LogOut, User, LayoutDashboard } from 'lucide-react';
+import { LogOut, User, LayoutDashboard, Settings } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,12 @@ export function LoginBtn() {
             <a href="/dashboard" className="flex items-center">
               <LayoutDashboard className="mr-2 h-4 w-4" />
               Dashboard
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <a href="/settings" className="flex items-center">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
             </a>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

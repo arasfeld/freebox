@@ -2,9 +2,14 @@ import { useMemo } from 'react';
 
 import { useAppSelector } from '../../hooks';
 import { useGetItemsQuery } from '../items/itemsApi';
-import { selectFilters, selectHasActiveFilters } from './searchSelectors';
+import {
+  selectFilters,
+  selectHasActiveFilters,
+  selectUserLocation,
+  selectDistanceUnit,
+} from './searchSelectors';
 
-import type { ItemWithDistance, SearchFilters } from '@/types';
+import type { ItemWithDistance, SearchFilters, GetItemsParams } from '@/types';
 
 interface UseSearchReturn {
   items: ItemWithDistance[];
@@ -24,6 +29,24 @@ interface UseSearchReturn {
 export function useSearch(): UseSearchReturn {
   const filters = useAppSelector(selectFilters);
   const hasActiveFilters = useAppSelector(selectHasActiveFilters);
+  const userLocation = useAppSelector(selectUserLocation);
+  const distanceUnit = useAppSelector(selectDistanceUnit);
+
+  // Prepare query parameters including location data
+  const queryParams = useMemo(() => {
+    const params: GetItemsParams = { ...filters };
+
+    // Add user location if available
+    if (userLocation?.lat && userLocation?.lng) {
+      params.userLat = userLocation.lat;
+      params.userLng = userLocation.lng;
+    }
+
+    // Add distance unit
+    params.distanceUnit = distanceUnit;
+
+    return params;
+  }, [filters, userLocation, distanceUnit]);
 
   const {
     data: items = [],
@@ -31,7 +54,7 @@ export function useSearch(): UseSearchReturn {
     isFetching,
     error,
     isError,
-  } = useGetItemsQuery(filters, {
+  } = useGetItemsQuery(queryParams, {
     pollingInterval: 0,
   });
 

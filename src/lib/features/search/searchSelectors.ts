@@ -19,8 +19,17 @@ export const selectStatus = (state: RootState) => state.search.filters.status;
 
 export const selectSortBy = (state: RootState) => state.search.filters.sortBy;
 
+export const selectRadiusKm = (state: RootState) =>
+  state.search.filters.radiusKm;
+
 export const selectUserLocation = (state: RootState) =>
   state.search.userLocation;
+
+export const selectDistancePreferences = (state: RootState) =>
+  state.search.distancePreferences;
+
+export const selectDistanceUnit = (state: RootState) =>
+  state.search.distancePreferences.unit;
 
 // Computed selectors
 export const selectHasActiveFilters = createSelector(
@@ -30,7 +39,8 @@ export const selectHasActiveFilters = createSelector(
       filters.search !== '' ||
       filters.category !== 'all' ||
       filters.location !== 'all' ||
-      filters.status !== 'all'
+      filters.status !== 'all' ||
+      filters.radiusKm !== undefined
     );
   }
 );
@@ -47,6 +57,8 @@ export const selectFilterSummary = createSelector(
       activeFilters.push(`Location: ${filters.location}`);
     if (filters.status !== 'all')
       activeFilters.push(`Status: ${filters.status}`);
+    if (filters.radiusKm !== undefined)
+      activeFilters.push(`Within ${filters.radiusKm}km`);
 
     return activeFilters;
   }

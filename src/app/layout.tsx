@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import StoreProvider from '@/app/StoreProvider';
 import { AuthProvider } from '@/components/auth-provider';
+import { PrimaryColorProvider } from '@/components/primary-color-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -36,15 +37,17 @@ export default function RootLayout({
       >
         <StoreProvider>
           <AuthProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-              <Toaster />
-            </ThemeProvider>
+            <PrimaryColorProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+                <Toaster />
+              </ThemeProvider>
+            </PrimaryColorProvider>
           </AuthProvider>
         </StoreProvider>
       </body>

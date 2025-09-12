@@ -2,11 +2,17 @@
 
 import { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
+import { Check, UserCheck } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import { useSelectRecipientMutation } from '@/lib/features/items/itemsApi';
 import { ITEM_STATUS_COLORS } from '@/types/search';
@@ -155,21 +161,13 @@ export function InterestManagement({ item }: InterestManagementProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          Interest Management ({item.interests.length} interested)
-          {(item.status as string) === 'TAKEN' && (
-            <Badge className="ml-2 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400 dark:bg-emerald-500/20">
-              Recipient Selected
-            </Badge>
-          )}
-        </CardTitle>
+        <CardTitle>Interest Management</CardTitle>
         <p className="text-sm text-muted-foreground">
-          {(item.status as string) === 'TAKEN'
-            ? 'A recipient has been selected for this item.'
-            : 'Review and select who should receive this item. Consider fairness scores and response times.'}
+          Review and select who should receive this item. Consider fairness
+          scores and response times.
         </p>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="grid gap-6">
         {sortedInterests.map((interest, index) => {
           const fairness = getFairnessScore(interest.userStats);
           const timeSinceInterest = new Date(
@@ -177,66 +175,85 @@ export function InterestManagement({ item }: InterestManagementProps) {
           ).toLocaleString();
           const isSelected = interest.selected;
           const isItemTaken = (item.status as string) === 'TAKEN';
+          const hasAnySelection = sortedInterests.some((i) => i.selected);
+          const isDisabled = hasAnySelection && !isSelected;
 
           return (
             <div
               key={interest.userId}
-              className={`flex items-center justify-between p-4 border rounded-lg ${
-                isSelected ? 'border-green-500 bg-green-50' : ''
+              className={`flex items-center justify-between space-x-4 ${
+                isDisabled ? 'opacity-50' : ''
               }`}
             >
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    #{index + 1}
-                  </span>
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={interest.user?.image || ''}
-                      alt={interest.user?.name || 'User avatar'}
-                    />
-                    <AvatarFallback>
-                      {interest.user?.name?.charAt(0) || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={interest.user?.image || ''}
+                    alt={interest.user?.name || 'User avatar'}
+                  />
+                  <AvatarFallback>
+                    {interest.user?.name?.charAt(0) || '?'}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
-                  <p className="font-medium">
+                  <p
+                    className={`text-sm font-medium leading-none ${
+                      isDisabled ? 'text-muted-foreground' : ''
+                    }`}
+                  >
                     {interest.user?.name || 'Unknown User'}
-                    {isSelected && (
-                      <Badge className="ml-2 bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400 dark:bg-emerald-500/20">
-                        Selected ✓
-                      </Badge>
-                    )}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Interested since {timeSinceInterest}
                   </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge
+                      className={`${fairness.color} ${
+                        isDisabled ? 'opacity-60' : ''
+                      }`}
+                      variant="outline"
+                    >
+                      {fairness.label}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {interest.userStats.totalItemsGiven} given /{' '}
+                      {interest.userStats.totalItemsReceived} received
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center space-x-3">
-                <div className="text-right">
-                  <Badge className={fairness.color}>{fairness.label}</Badge>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {interest.userStats.totalItemsGiven} given /{' '}
-                    {interest.userStats.totalItemsReceived} received
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Avg response: {interest.userStats.averageResponseTime}h
-                  </div>
-                </div>
-
-                <Button
-                  size="sm"
-                  onClick={() => handleSelectRecipient(interest.userId)}
-                  disabled={isSelecting || isItemTaken}
-                  variant={isSelected ? 'outline' : 'default'}
-                >
-                  {isSelected ? 'Selected' : 'Select'}
-                </Button>
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    onClick={() => handleSelectRecipient(interest.userId)}
+                    disabled={isSelecting || isItemTaken || isDisabled}
+                    variant="outline"
+                    className={
+                      isSelected
+                        ? 'bg-green-50 border-green-200 text-green-700'
+                        : isDisabled
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                    }
+                  >
+                    {isSelected ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <UserCheck className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {isSelected
+                      ? 'Selected as Recipient'
+                      : isDisabled
+                      ? 'Another recipient is selected'
+                      : 'Select as Recipient'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           );
         })}

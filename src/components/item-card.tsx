@@ -34,7 +34,8 @@ import {
   useRemoveInterestMutation,
 } from '@/lib/features/items/itemsApi';
 import { ITEM_STATUS_COLORS } from '@/types/search';
-import { formatDistance } from '@/lib/utils';
+
+import { DistanceBadge } from '@/components/distance-badge';
 
 import type { ItemStatus, ItemWithDistance } from '@/types';
 
@@ -125,23 +126,21 @@ export const ItemCard = React.memo(function ItemCard({
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
-            <CardTitle className="text-lg line-clamp-2">{item.title}</CardTitle>
-            <div className="flex flex-col items-end gap-1">
-              <Badge className={getStatusColor(item.status)}>
-                {item.status}
-              </Badge>
-              {item.distance !== undefined && item.distance !== null && (
-                <span className="text-xs text-muted-foreground">
-                  {formatDistance(item.distance)} away
-                </span>
-              )}
+            <div className="flex-1">
+              <CardTitle className="text-lg line-clamp-2 mb-2">
+                {item.title}
+              </CardTitle>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className={getStatusColor(item.status)}>
+                  {item.status}
+                </Badge>
+                {item.category && (
+                  <Badge variant="outline">{item.category}</Badge>
+                )}
+              </div>
             </div>
+            <DistanceBadge distance={item.distance ?? null} />
           </div>
-          {item.category && (
-            <Badge variant="outline" className="w-fit">
-              {item.category}
-            </Badge>
-          )}
         </CardHeader>
         <CardContent className="space-y-4">
           {item.images.length > 0 && (
@@ -249,13 +248,15 @@ export const ItemCard = React.memo(function ItemCard({
                       className="flex items-center gap-2"
                     >
                       <Heart className="h-4 w-4" />
-                      {isExpressingInterest
-                        ? 'Expressing...'
-                        : "I'm Interested"}
+                      {isExpressingInterest ? '...' : ''}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Express Interest</p>
+                    <p>
+                      {isExpressingInterest
+                        ? 'Expressing Interest...'
+                        : "I'm Interested"}
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               )}

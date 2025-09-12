@@ -1,11 +1,12 @@
 'use client';
 
-import { use, useCallback, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
 import Image from 'next/image';
 
 import { DeleteModal } from '@/components/delete-modal';
+import { DistanceBadge } from '@/components/distance-badge';
 import { ImageModal } from '@/components/image-modal';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,6 +19,9 @@ import {
   useExpressInterestMutation,
   useRemoveInterestMutation,
 } from '@/lib/features/items/itemsApi';
+import { calculateDistance } from '@/lib/utils/distance';
+import { useAppSelector } from '@/lib/hooks';
+import { selectUserLocation } from '@/lib/features/search/searchSelectors';
 import { toast } from 'sonner';
 
 import type { ItemWithDistance } from '@/types';
@@ -47,6 +51,36 @@ export default function ItemDetailPage({
     useExpressInterestMutation();
   const [removeInterest, { isLoading: isRemovingInterest }] =
     useRemoveInterestMutation();
+
+  // Get user location from store
+  const userLocation = useAppSelector(selectUserLocation);
+
+  // Calculate distance between user and item
+  const itemWithDistance = useMemo(() => {
+    if (!item) return null;
+
+    let distance: number | null = null;
+
+    // Calculate distance if both user and item have coordinates
+    if (
+      userLocation?.lat &&
+      userLocation?.lng &&
+      item.latitude &&
+      item.longitude
+    ) {
+      distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        item.latitude,
+        item.longitude
+      );
+    }
+
+    return {
+      ...item,
+      distance,
+    };
+  }, [item, userLocation]);
 
   useEffect(() => {
     if (id) {
@@ -85,7 +119,7 @@ export default function ItemDetailPage({
 
   const handleUndoInterest = useCallback(async () => {
     try {
-      await removeInterest({ itemId: item?.id || '' }).unwrap();
+      await removeInterest({ itemId: itemWithDistance?.id || '' }).unwrap();
       toast.success('Interest removed', {
         description: 'Your interest has been removed from this item.',
       });
@@ -95,11 +129,11 @@ export default function ItemDetailPage({
         description: 'Please try again later.',
       });
     }
-  }, [removeInterest, item?.id]);
+  }, [removeInterest, itemWithDistance?.id]);
 
   const handleExpressInterest = useCallback(async () => {
     try {
-      await expressInterest({ itemId: item?.id || '' }).unwrap();
+      await expressInterest({ itemId: itemWithDistance?.id || '' }).unwrap();
 
       // Show success notification with undo option
       toast.success('Interest expressed successfully!', {
@@ -116,13 +150,13 @@ export default function ItemDetailPage({
         description: 'Please try again later.',
       });
     }
-  }, [expressInterest, handleUndoInterest, item?.id]);
+  }, [expressInterest, handleUndoInterest, itemWithDistance?.id]);
 
   const handleRemoveInterest = useCallback(async () => {
-    if (!item) return;
+    if (!itemWithDistance) return;
 
     try {
-      await removeInterest({ itemId: item.id }).unwrap();
+      await removeInterest({ itemId: itemWithDistance.id }).unwrap();
       setItem((prev) =>
         prev
           ? { ...prev, status: 'AVAILABLE', hasExpressedInterest: false }
@@ -137,13 +171,13 @@ export default function ItemDetailPage({
         description: 'Please try again later.',
       });
     }
-  }, [removeInterest, item]);
+  }, [removeInterest, itemWithDistance]);
 
   const handleDelete = async () => {
-    if (!item) return;
+    if (!itemWithDistance) return;
 
     try {
-      const response = await fetch(`/api/items/${item.id}`, {
+      const response = await fetch(`/api/items/${itemWithDistance.id}`, {
         method: 'DELETE',
       });
 
@@ -249,16 +283,16 @@ export default function ItemDetailPage({
               </div>
             </div>
           </div>
-        ) : item ? (
+        ) : itemWithDistance ? (
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Item Images */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-                  {item.images.length > 0 ? (
+                  {itemWithDistance.images.length > 0 ? (
                     <Image
-                      src={item.images[currentImageIndex]}
-                      alt={item.title}
+                      src={itemWithDistance.images[currentImageIndex]}
+                      alt={itemWithDistance.title}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw"
                       className="object-cover cursor-pointer"
@@ -271,9 +305,9 @@ export default function ItemDetailPage({
                     </div>
                   )}
                 </div>
-                {item.images.length > 1 && (
+                {itemWithDistance.images.length > 1 && (
                   <div className="grid grid-cols-4 gap-2">
-                    {item.images.map((image, index) => (
+                    {itemWithDistance.images.map((image, index) => (
                       <div
                         key={index}
                         className={`relative aspect-square rounded overflow-hidden cursor-pointer border-2 ${
@@ -285,7 +319,7 @@ export default function ItemDetailPage({
                       >
                         <Image
                           src={image}
-                          alt={`${item.title} - Image ${index + 1}`}
+                          alt={`${itemWithDistance.title} - Image ${index + 1}`}
                           fill
                           sizes="(max-width: 768px) 25vw, 12.5vw"
                           className="object-cover"
@@ -301,22 +335,30 @@ export default function ItemDetailPage({
                 <div>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h1 className="text-3xl font-bold mb-2">{item.title}</h1>
+                      <h1 className="text-3xl font-bold mb-2">
+                        {itemWithDistance.title}
+                      </h1>
                       <div className="flex items-center gap-2 mb-4">
-                        <Badge className={getStatusColor(item.status)}>
-                          {item.status}
+                        <Badge
+                          className={getStatusColor(itemWithDistance.status)}
+                        >
+                          {itemWithDistance.status}
                         </Badge>
-                        {item.category && (
-                          <Badge variant="outline">{item.category}</Badge>
+                        {itemWithDistance.category && (
+                          <Badge variant="outline">
+                            {itemWithDistance.category}
+                          </Badge>
                         )}
                       </div>
                     </div>
-                    {item.isOwner && (
+                    {itemWithDistance.isOwner && (
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => router.push(`/items/${item.id}/edit`)}
+                          onClick={() =>
+                            router.push(`/items/${itemWithDistance.id}/edit`)
+                          }
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -331,21 +373,19 @@ export default function ItemDetailPage({
                     )}
                   </div>
 
-                  {item.description && (
+                  {itemWithDistance.description && (
                     <p className="text-muted-foreground leading-relaxed">
-                      {item.description}
+                      {itemWithDistance.description}
                     </p>
                   )}
                 </div>
 
                 {/* Location */}
-                {item.location && (
+                {itemWithDistance.location && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span>📍</span>
-                    <span>{item.location}</span>
-                    {item.distance && (
-                      <span>({item.distance.toFixed(1)} km)</span>
-                    )}
+                    <span>{itemWithDistance.location}</span>
+                    <DistanceBadge distance={itemWithDistance.distance} />
                   </div>
                 )}
 
@@ -357,17 +397,21 @@ export default function ItemDetailPage({
                   <CardContent>
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarImage src={item.user.image || undefined} />
+                        <AvatarImage
+                          src={itemWithDistance.user.image || undefined}
+                        />
                         <AvatarFallback>
-                          {item.user.name?.[0] || 'U'}
+                          {itemWithDistance.user.name?.[0] || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-medium">
-                          {item.user.name || 'Anonymous'}
+                          {itemWithDistance.user.name || 'Anonymous'}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(item.createdAt).toLocaleDateString()}
+                          {new Date(
+                            itemWithDistance.createdAt
+                          ).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -375,9 +419,9 @@ export default function ItemDetailPage({
                 </Card>
 
                 {/* Action Buttons */}
-                {!item.isOwner && (
+                {!itemWithDistance.isOwner && (
                   <div className="space-y-3">
-                    {item.hasExpressedInterest ? (
+                    {itemWithDistance.hasExpressedInterest ? (
                       <Button
                         variant="outline"
                         onClick={handleRemoveInterest}
@@ -401,10 +445,10 @@ export default function ItemDetailPage({
                 )}
 
                 {/* Interest Management (for owners) */}
-                {item.isOwner &&
-                  item.interests &&
-                  item.interests.length > 0 && (
-                    <InterestManagement item={item} />
+                {itemWithDistance.isOwner &&
+                  itemWithDistance.interests &&
+                  itemWithDistance.interests.length > 0 && (
+                    <InterestManagement item={itemWithDistance} />
                   )}
               </div>
             </div>
@@ -417,9 +461,9 @@ export default function ItemDetailPage({
       </div>
 
       {/* Image Modal */}
-      {item && (
+      {itemWithDistance && (
         <ImageModal
-          images={item.images}
+          images={itemWithDistance.images}
           isOpen={imageModalOpen}
           onClose={() => setImageModalOpen(false)}
           initialIndex={currentImageIndex}

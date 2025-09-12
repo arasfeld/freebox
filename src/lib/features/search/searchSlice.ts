@@ -1,10 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import type { SearchFilters, UserLocation, SortOption } from '@/types';
+import { DEFAULT_DISTANCE_PREFERENCES } from '@/lib/utils/distance';
+import type { DistanceUnit, DistancePreferences } from '@/lib/utils/distance';
 
 interface SearchState {
   filters: SearchFilters;
   userLocation: UserLocation | null;
+  distancePreferences: DistancePreferences;
 }
 
 const initialState: SearchState = {
@@ -16,6 +19,7 @@ const initialState: SearchState = {
     sortBy: 'newest',
   },
   userLocation: null,
+  distancePreferences: DEFAULT_DISTANCE_PREFERENCES,
 };
 
 export const searchSlice = createSlice({
@@ -37,8 +41,17 @@ export const searchSlice = createSlice({
     setSortBy: (state, action: PayloadAction<SortOption>) => {
       state.filters.sortBy = action.payload;
     },
+    setRadiusKm: (state, action: PayloadAction<number | undefined>) => {
+      state.filters.radiusKm = action.payload;
+    },
     setUserLocation: (state, action: PayloadAction<UserLocation | null>) => {
       state.userLocation = action.payload;
+    },
+    setDistanceUnit: (state, action: PayloadAction<DistanceUnit>) => {
+      state.distancePreferences.unit = action.payload;
+    },
+    setDistanceShowUnit: (state, action: PayloadAction<boolean>) => {
+      state.distancePreferences.showUnit = action.payload;
     },
     resetFilters: (state) => {
       state.filters = initialState.filters;
@@ -52,6 +65,9 @@ export const {
   setLocation,
   setStatus,
   setSortBy,
+  setRadiusKm,
+  setDistanceUnit,
+  setDistanceShowUnit,
   setUserLocation,
   resetFilters,
 } = searchSlice.actions;

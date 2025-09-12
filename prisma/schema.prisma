@@ -81,6 +81,28 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  
+  // Contact Information
+  phone         String?
+  preferredContact String? // "email", "phone", "both"
+  
+  // Address Information
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  latitude      Float?    // For geocoding
+  longitude     Float?    // For geocoding
+  
+  // Pickup Preferences
+  pickupInstructions String? // Special instructions for pickup
+  availableHours     String? // e.g., "Weekdays 6-8pm, Weekends 10am-4pm"
+  preferredPickupMethod String? // "curbside", "door", "meet", "other"
+  
+  // Privacy Settings
+  showContactInfo Boolean @default(false) // Whether to show contact info to others
+  showAddress     Boolean @default(false) // Whether to show address to others
+  
   accounts      Account[]
   sessions      Session[]
   items         Item[]
