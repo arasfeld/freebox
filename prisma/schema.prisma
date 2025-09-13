@@ -29,18 +29,42 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Address Information
+  label       String?  // e.g., "Home", "Work", "Apartment"
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  latitude    Float?   // For geocoding
+  longitude   Float?   // For geocoding
+  
+  // Address-specific settings
+  isDefault   Boolean  @default(false) // Primary address for this user
+  isActive    Boolean  @default(true)  // Whether this address is currently active
+  
+  // Relations
+  items       Item[]   // Items associated with this address
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Item {
   id          String     @id @default(cuid())
   title       String
   description String?
   images      String[]   // Array of image URLs
   category    String?
-  location    String?
-  latitude    Float?     // Latitude coordinate
-  longitude   Float?     // Longitude coordinate
   status      ItemStatus @default(AVAILABLE)
   userId      String
+  addressId   String?
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address     Address?   @relation(fields: [addressId], references: [id], onDelete: SetNull)
   interests   ItemInterest[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -85,6 +109,7 @@ model User {
   sessions      Session[]
   items         Item[]
   interests     ItemInterest[]
+  addresses     Address[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }

@@ -1,18 +1,6 @@
 // Database types based on Prisma schema
 // These types should match the Prisma schema exactly
 
-export type ItemStatus = 'AVAILABLE' | 'PENDING' | 'TAKEN';
-
-export interface User {
-  id: string;
-  name: string | null;
-  email: string | null;
-  emailVerified: Date | null;
-  image: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface Account {
   id: string;
   userId: string;
@@ -29,12 +17,22 @@ export interface Account {
   user: User;
 }
 
-export interface Session {
+export interface Address {
   id: string;
-  sessionToken: string;
   userId: string;
-  expires: Date;
+  label: string | null;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  latitude: number | null;
+  longitude: number | null;
+  isDefault: boolean;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
   user: User;
+  items: Item[];
 }
 
 export interface Item {
@@ -43,12 +41,11 @@ export interface Item {
   description: string | null;
   images: string[];
   category: string | null;
-  location: string | null;
-  latitude: number | null;
-  longitude: number | null;
   status: ItemStatus;
   userId: string;
+  addressId: string | null;
   user: User;
+  address: Address | null;
   interests: ItemInterest[];
   createdAt: Date;
   updatedAt: Date;
@@ -63,6 +60,31 @@ export interface ItemInterest {
   userStats: UserStats;
   item: Item;
   user: User;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type ItemStatus = 'AVAILABLE' | 'PENDING' | 'TAKEN';
+
+export interface Session {
+  id: string;
+  sessionToken: string;
+  userId: string;
+  expires: Date;
+  user: User;
+}
+
+export interface User {
+  id: string;
+  name: string | null;
+  email: string | null;
+  emailVerified: Date | null;
+  image: string | null;
+  accounts: Account[];
+  sessions: Session[];
+  items: Item[];
+  interests: ItemInterest[];
+  addresses: Address[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -97,9 +119,7 @@ export interface CreateItemRequest {
   description?: string;
   images: string[];
   category?: string;
-  location?: string;
-  latitude?: number;
-  longitude?: number;
+  addressId?: string;
 }
 
 export interface UpdateItemRequest {
@@ -107,9 +127,7 @@ export interface UpdateItemRequest {
   description?: string;
   images?: string[];
   category?: string;
-  location?: string;
-  latitude?: number;
-  longitude?: number;
+  addressId?: string;
   status?: ItemStatus;
 }
 
@@ -134,9 +152,7 @@ export interface ItemFormData {
   title: string;
   description: string;
   category: string;
-  location: string;
-  latitude?: number;
-  longitude?: number;
+  addressId?: string;
   images: string[];
 }
 

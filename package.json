@@ -6,6 +6,7 @@
     "build": "next build --turbopack",
     "db:generate": "npx prisma generate",
     "db:migrate": "npx prisma migrate deploy",
+    "db:migrate:dev": "npx prisma migrate dev",
     "db:reset": "npx prisma migrate reset",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "npx prisma studio",

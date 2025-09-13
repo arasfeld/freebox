@@ -98,16 +98,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const {
-      title,
-      description,
-      images,
-      category,
-      location,
-      latitude,
-      longitude,
-      status,
-    } = body;
+    const { title, description, images, category, addressId, status } = body;
 
     const updatedItem = await prisma.item.update({
       where: { id },
@@ -116,9 +107,7 @@ export async function PATCH(
         description,
         images,
         category,
-        location,
-        latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null,
+        addressId,
         status,
       },
       include: {
@@ -128,6 +117,17 @@ export async function PATCH(
             name: true,
             email: true,
             image: true,
+          },
+        },
+        address: {
+          select: {
+            id: true,
+            address: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            latitude: true,
+            longitude: true,
           },
         },
       },

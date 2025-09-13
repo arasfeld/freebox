@@ -26,7 +26,13 @@ export async function GET(request: NextRequest) {
 
     const where: {
       category?: string;
-      location?: { contains: string; mode: 'insensitive' };
+      address?: {
+        OR?: Array<{
+          address?: { contains: string; mode: 'insensitive' };
+          city?: { contains: string; mode: 'insensitive' };
+          state?: { contains: string; mode: 'insensitive' };
+        }>;
+      };
       status?: ItemStatus;
       OR?: Array<{
         title?: { contains: string; mode: 'insensitive' };
@@ -46,9 +52,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (location && location !== 'all') {
-      where.location = {
-        contains: location,
-        mode: 'insensitive',
+      where.address = {
+        OR: [
+          { address: { contains: location, mode: 'insensitive' } },
+          { city: { contains: location, mode: 'insensitive' } },
+          { state: { contains: location, mode: 'insensitive' } },
+        ],
       };
     }
 
@@ -122,15 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      title,
-      description,
-      images,
-      category,
-      location,
-      latitude,
-      longitude,
-    } = body;
+    const { title, description, images, category, addressId } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -142,9 +143,7 @@ export async function POST(request: NextRequest) {
         description,
         images: images || [],
         category,
-        location,
-        latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null,
+        addressId,
         userId: session.user.id,
       },
       include: {
@@ -154,6 +153,17 @@ export async function POST(request: NextRequest) {
             name: true,
             email: true,
             image: true,
+          },
+        },
+        address: {
+          select: {
+            id: true,
+            address: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            latitude: true,
+            longitude: true,
           },
         },
       },
