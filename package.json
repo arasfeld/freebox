@@ -15,7 +15,7 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "postinstall": "prisma generate --no-engine",
+    "postinstall": "npx prisma generate --no-engine",
     "start": "next start"
   },
   "dependencies": {
