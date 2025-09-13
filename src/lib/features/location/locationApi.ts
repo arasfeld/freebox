@@ -17,7 +17,7 @@ export const locationApi = createApi({
     baseUrl: '/api/location',
   }),
   tagTypes: ['Location'],
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     geocodeAddress: builder.query<GeocodeResult[], GeocodeRequest>({
       query: ({ query, limit = 5 }) => ({
         url: '/search',
@@ -28,7 +28,7 @@ export const locationApi = createApi({
       }),
       keepUnusedDataFor: 300, // 5 minutes
       transformResponse: (data: NominatimSearchResult[]): GeocodeResult[] => {
-        return data.map((result) => ({
+        return data.map(result => ({
           lat: parseFloat(result.lat),
           lng: parseFloat(result.lon),
           displayName: result.display_name,
@@ -93,7 +93,7 @@ export const locationApi = createApi({
       }),
       keepUnusedDataFor: 300, // 5 minutes
       transformResponse: (data: NominatimSearchResult[]): GeocodeResult[] => {
-        return data.map((result) => ({
+        return data.map(result => ({
           lat: parseFloat(result.lat),
           lng: parseFloat(result.lon),
           displayName: result.display_name,

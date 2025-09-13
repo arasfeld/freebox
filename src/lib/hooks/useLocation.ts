@@ -15,7 +15,7 @@ const LOCATION_STORAGE_KEY = 'user-location';
  */
 export function useLocation() {
   const dispatch = useAppDispatch();
-  const userLocation = useAppSelector((state) => state.search.userLocation);
+  const userLocation = useAppSelector(state => state.search.userLocation);
   const [tempCoordinates, setTempCoordinates] = useState<{
     lat: number;
     lng: number;

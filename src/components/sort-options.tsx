@@ -25,7 +25,7 @@ export function SortOptions({ value, onValueChange }: SortOptionsProps) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {SORT_OPTIONS.map((option) => (
+          {SORT_OPTIONS.map(option => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>

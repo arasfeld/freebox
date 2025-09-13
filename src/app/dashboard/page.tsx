@@ -82,7 +82,7 @@ export default function DashboardPage() {
 
   const handleItemDelete = useCallback(
     async (itemId: string) => {
-      const item = items.find((item) => item.id === itemId);
+      const item = items.find(item => item.id === itemId);
       if (!item) return;
 
       setItemToDelete(item);
@@ -100,7 +100,7 @@ export default function DashboardPage() {
       });
 
       if (response.ok) {
-        setItems(items.filter((item) => item.id !== itemToDelete.id));
+        setItems(items.filter(item => item.id !== itemToDelete.id));
         setDeleteModalOpen(false);
         setItemToDelete(null);
       } else {
@@ -124,7 +124,7 @@ export default function DashboardPage() {
 
         if (response.ok) {
           setItems(
-            items.map((item) =>
+            items.map(item =>
               item.id === itemId ? { ...item, status: newStatus } : item
             )
           );
@@ -184,9 +184,9 @@ export default function DashboardPage() {
     return null; // Will redirect
   }
 
-  const availableItems = items.filter((item) => item.status === 'AVAILABLE');
-  const pendingItems = items.filter((item) => item.status === 'PENDING');
-  const takenItems = items.filter((item) => item.status === 'TAKEN');
+  const availableItems = items.filter(item => item.status === 'AVAILABLE');
+  const pendingItems = items.filter(item => item.status === 'PENDING');
+  const takenItems = items.filter(item => item.status === 'TAKEN');
 
   return (
     <Layout>
@@ -269,7 +269,7 @@ export default function DashboardPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {availableItems.map((item) => (
+                {availableItems.map(item => (
                   <ItemCard
                     key={item.id}
                     item={transformDashboardItemToItem(item)}
@@ -292,7 +292,7 @@ export default function DashboardPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {pendingItems.map((item) => (
+                {pendingItems.map(item => (
                   <ItemCard
                     key={item.id}
                     item={transformDashboardItemToItem(item)}
@@ -315,7 +315,7 @@ export default function DashboardPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {takenItems.map((item) => (
+                {takenItems.map(item => (
                   <ItemCard
                     key={item.id}
                     item={transformDashboardItemToItem(item)}

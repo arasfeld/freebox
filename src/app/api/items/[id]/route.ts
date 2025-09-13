@@ -46,7 +46,7 @@ export async function GET(
     // Calculate isOwner and hasExpressedInterest
     const isOwner = session?.user?.id === item.userId;
     const hasExpressedInterest = session?.user?.id
-      ? item.interests.some((interest) => interest.userId === session.user.id)
+      ? item.interests.some(interest => interest.userId === session.user.id)
       : false;
 
     // Add computed fields to the response

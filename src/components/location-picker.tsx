@@ -58,7 +58,7 @@ export function LocationPicker() {
   // Transform location options for autocomplete - memoized to prevent unnecessary re-renders
   const transformedLocationOptions = useMemo(
     () =>
-      locationOptions.map((result) => ({
+      locationOptions.map(result => ({
         value: result.displayName,
         label: result.displayName,
       })),
@@ -82,7 +82,7 @@ export function LocationPicker() {
     (locationName: string) => {
       // Find the location data from search results
       const location = locationOptions.find(
-        (loc) => loc.displayName === locationName
+        loc => loc.displayName === locationName
       );
 
       if (location) {

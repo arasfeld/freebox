@@ -25,7 +25,7 @@ export const selectUserLocation = (state: RootState) =>
 // Computed selectors
 export const selectHasActiveFilters = createSelector(
   [selectFilters],
-  (filters) => {
+  filters => {
     return (
       filters.search !== '' ||
       filters.category !== 'all' ||
@@ -35,19 +35,15 @@ export const selectHasActiveFilters = createSelector(
   }
 );
 
-export const selectFilterSummary = createSelector(
-  [selectFilters],
-  (filters) => {
-    const activeFilters = [];
+export const selectFilterSummary = createSelector([selectFilters], filters => {
+  const activeFilters = [];
 
-    if (filters.search) activeFilters.push(`Search: "${filters.search}"`);
-    if (filters.category !== 'all')
-      activeFilters.push(`Category: ${filters.category}`);
-    if (filters.location !== 'all')
-      activeFilters.push(`Location: ${filters.location}`);
-    if (filters.status !== 'all')
-      activeFilters.push(`Status: ${filters.status}`);
+  if (filters.search) activeFilters.push(`Search: "${filters.search}"`);
+  if (filters.category !== 'all')
+    activeFilters.push(`Category: ${filters.category}`);
+  if (filters.location !== 'all')
+    activeFilters.push(`Location: ${filters.location}`);
+  if (filters.status !== 'all') activeFilters.push(`Status: ${filters.status}`);
 
-    return activeFilters;
-  }
-);
+  return activeFilters;
+});

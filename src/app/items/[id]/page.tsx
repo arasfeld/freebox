@@ -123,7 +123,7 @@ export default function ItemDetailPage({
 
     try {
       await removeInterest({ itemId: item.id }).unwrap();
-      setItem((prev) =>
+      setItem(prev =>
         prev
           ? { ...prev, status: 'AVAILABLE', hasExpressedInterest: false }
           : null

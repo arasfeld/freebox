@@ -37,10 +37,13 @@ export function AutoComplete<T extends string>({
 
   const labels = useMemo(
     () =>
-      items.reduce((acc, item) => {
-        acc[item.value] = item.label;
-        return acc;
-      }, {} as Record<string, string>),
+      items.reduce(
+        (acc, item) => {
+          acc[item.value] = item.label;
+          return acc;
+        },
+        {} as Record<string, string>
+      ),
     [items]
   );
 
@@ -77,8 +80,8 @@ export function AutoComplete<T extends string>({
               asChild
               value={searchValue}
               onValueChange={onSearchValueChange}
-              onKeyDown={(e) => setOpen(e.key !== 'Escape')}
-              onMouseDown={() => setOpen((open) => !!searchValue || !open)}
+              onKeyDown={e => setOpen(e.key !== 'Escape')}
+              onMouseDown={() => setOpen(open => !!searchValue || !open)}
               onFocus={() => setOpen(true)}
               onBlur={onInputBlur}
             >
@@ -88,8 +91,8 @@ export function AutoComplete<T extends string>({
           {!open && <CommandList aria-hidden="true" className="hidden" />}
           <PopoverContent
             asChild
-            onOpenAutoFocus={(e) => e.preventDefault()}
-            onInteractOutside={(e) => {
+            onOpenAutoFocus={e => e.preventDefault()}
+            onInteractOutside={e => {
               if (
                 e.target instanceof Element &&
                 e.target.hasAttribute('cmdk-input')
@@ -111,11 +114,11 @@ export function AutoComplete<T extends string>({
                 </div>
               ) : items.length > 0 ? (
                 <CommandGroup>
-                  {items.map((option) => (
+                  {items.map(option => (
                     <CommandItem
                       key={option.value}
                       value={option.value}
-                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseDown={e => e.preventDefault()}
                       onSelect={onSelectItem}
                       className="flex items-center gap-2"
                     >

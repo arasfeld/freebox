@@ -40,7 +40,7 @@ export const searchSlice = createSlice({
     setUserLocation: (state, action: PayloadAction<UserLocation | null>) => {
       state.userLocation = action.payload;
     },
-    resetFilters: (state) => {
+    resetFilters: state => {
       state.filters = initialState.filters;
     },
   },

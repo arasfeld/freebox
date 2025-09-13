@@ -11,7 +11,7 @@ export const makeStore = () => {
       [itemsApi.reducerPath]: itemsApi.reducer,
       [locationApi.reducerPath]: locationApi.reducer,
     },
-    middleware: (getDefaultMiddleware) =>
+    middleware: getDefaultMiddleware =>
       getDefaultMiddleware().concat(
         itemsApi.middleware,
         locationApi.middleware

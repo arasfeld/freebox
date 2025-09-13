@@ -73,7 +73,7 @@ export function SearchFilters() {
 
   const categoryOptions = useMemo(
     () =>
-      CATEGORIES.map((category) => (
+      CATEGORIES.map(category => (
         <SelectItem key={category} value={category}>
           {category}
         </SelectItem>
@@ -89,7 +89,7 @@ export function SearchFilters() {
         <Input
           placeholder="Search items by title or description..."
           value={filters.search}
-          onChange={(e) => dispatch(setSearch(e.target.value))}
+          onChange={e => dispatch(setSearch(e.target.value))}
           className="w-full pl-10"
         />
       </div>
@@ -123,7 +123,7 @@ export function SearchFilters() {
                 </label>
                 <Select
                   value={filters.category}
-                  onValueChange={(value) => dispatch(setCategory(value))}
+                  onValueChange={value => dispatch(setCategory(value))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Categories" />
@@ -142,9 +142,7 @@ export function SearchFilters() {
                 <Input
                   placeholder="Enter location to filter by..."
                   value={filters.location === 'all' ? '' : filters.location}
-                  onChange={(e) =>
-                    dispatch(setLocation(e.target.value || 'all'))
-                  }
+                  onChange={e => dispatch(setLocation(e.target.value || 'all'))}
                 />
               </div>
 
@@ -152,13 +150,13 @@ export function SearchFilters() {
                 <label className="text-sm font-medium mb-2 block">Status</label>
                 <Select
                   value={filters.status}
-                  onValueChange={(value) => dispatch(setStatus(value))}
+                  onValueChange={value => dispatch(setStatus(value))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    {STATUS_OPTIONS.map((status) => (
+                    {STATUS_OPTIONS.map(status => (
                       <SelectItem key={status.value} value={status.value}>
                         {status.label}
                       </SelectItem>
@@ -173,7 +171,7 @@ export function SearchFilters() {
                 </label>
                 <SortOptions
                   value={sortBy}
-                  onValueChange={(value) => dispatch(setSortBy(value))}
+                  onValueChange={value => dispatch(setSortBy(value))}
                 />
               </div>
             </div>

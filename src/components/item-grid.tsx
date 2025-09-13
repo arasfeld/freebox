@@ -94,7 +94,7 @@ export function ItemGrid() {
     if (!userLocation || userLocation.lat === null || userLocation.lng === null)
       return sortedItems;
 
-    return sortedItems.map((item) => ({
+    return sortedItems.map(item => ({
       ...item,
       distance:
         item.latitude &&
@@ -188,7 +188,7 @@ export function ItemGrid() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {itemsWithDistance.map((item) => (
+        {itemsWithDistance.map(item => (
           <ItemCard key={item.id} item={item} />
         ))}
       </div>

@@ -41,7 +41,7 @@ export function useLocationSearch({
   );
 
   // Transform location options for autocomplete
-  const transformedLocationOptions = locationOptions.map((result) => ({
+  const transformedLocationOptions = locationOptions.map(result => ({
     value: result.displayName,
     label: result.displayName,
   }));

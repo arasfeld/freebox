@@ -318,7 +318,7 @@ async function main() {
   // Add interests to Adam's existing items
   console.log("\nAdding interests to Adam's items...");
   const adamUser = createdUsers.find(
-    (user) => user.email === 'arasfeld@gmail.com'
+    user => user.email === 'arasfeld@gmail.com'
   );
 
   if (adamUser) {
@@ -343,7 +343,7 @@ async function main() {
 
         // Create interests from other users
         const interestUsers = createdUsers
-          .filter((user) => user.email !== 'arasfeld@gmail.com')
+          .filter(user => user.email !== 'arasfeld@gmail.com')
           .slice(0, 4);
 
         for (let i = 0; i < interestUsers.length; i++) {
@@ -380,7 +380,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('❌ Error seeding database:', e);
     process.exit(1);
   })

@@ -11,9 +11,9 @@ export const itemsApi = createApi({
   reducerPath: 'itemsApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
   tagTypes: ['Items'],
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     getItems: builder.query<ItemWithDistance[], GetItemsParams>({
-      query: (params) => {
+      query: params => {
         const searchParams = new URLSearchParams();
 
         if (params.search) {
@@ -40,7 +40,7 @@ export const itemsApi = createApi({
       keepUnusedDataFor: 300, // Keep data for 5 minutes
     }),
     getItem: builder.query<ItemWithDistance, string>({
-      query: (id) => `items/${id}`,
+      query: id => `items/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Items', id }],
     }),
     expressInterest: builder.mutation<ItemWithDistance, ExpressInterestRequest>(
@@ -52,8 +52,8 @@ export const itemsApi = createApi({
         // Optimistic update
         async onQueryStarted({ itemId }, { dispatch, queryFulfilled }) {
           const patchResult = dispatch(
-            itemsApi.util.updateQueryData('getItems', {}, (draft) => {
-              const item = draft.find((item) => item.id === itemId);
+            itemsApi.util.updateQueryData('getItems', {}, draft => {
+              const item = draft.find(item => item.id === itemId);
               if (item) {
                 item.hasExpressedInterest = true;
               }

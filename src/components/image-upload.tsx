@@ -33,7 +33,7 @@ export function ImageUpload({
       setUploading(true);
 
       try {
-        const uploadPromises = acceptedFiles.map(async (file) => {
+        const uploadPromises = acceptedFiles.map(async file => {
           const formData = new FormData();
           formData.append('file', file);
 
@@ -137,7 +137,7 @@ export function ImageUpload({
                   src={imageUrl}
                   alt={`Uploaded image ${index + 1}`}
                   className="absolute inset-0 w-full h-full object-cover"
-                  onError={(e) => {
+                  onError={e => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                   }}

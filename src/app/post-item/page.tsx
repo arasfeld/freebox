@@ -194,7 +194,7 @@ export default function PostItemPage() {
                   <Input
                     id="title"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={e => setTitle(e.target.value)}
                     placeholder="e.g., Free couch in good condition"
                     required
                   />
@@ -205,7 +205,7 @@ export default function PostItemPage() {
                   <Textarea
                     id="description"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={e => setDescription(e.target.value)}
                     placeholder="Describe the item, its condition, and any relevant details..."
                     rows={4}
                   />
@@ -216,13 +216,13 @@ export default function PostItemPage() {
                     <Label htmlFor="category">Category</Label>
                     <Select
                       value={category}
-                      onValueChange={(value) => setCategory(value)}
+                      onValueChange={value => setCategory(value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
+                        {categories.map(category => (
                           <SelectItem key={category} value={category}>
                             {category}
                           </SelectItem>
@@ -266,7 +266,7 @@ export default function PostItemPage() {
                   <Label>Images</Label>
                   <ImageUpload
                     images={images}
-                    onImagesChange={(images) => setImages(images)}
+                    onImagesChange={images => setImages(images)}
                     maxImages={5}
                   />
                 </div>

@@ -15,7 +15,7 @@ const createPrismaClient = () => {
     .then(() => {
       console.log('✅ Prisma Client connected successfully');
     })
-    .catch((error) => {
+    .catch(error => {
       console.error('❌ Prisma Client connection failed:', error);
     });
 

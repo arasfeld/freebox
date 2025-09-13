@@ -123,7 +123,7 @@ export default function EditItemPage({
 
   const handleInputChange = useCallback(
     (field: string, value: string | string[]) => {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         [field]: value,
       }));
@@ -133,7 +133,7 @@ export default function EditItemPage({
 
   const handleLocationSelect = useCallback(
     (locationName: string) => {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         location: locationName,
         // For now, we'll need to get coordinates from another API call
@@ -241,7 +241,7 @@ export default function EditItemPage({
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  onChange={e => handleInputChange('title', e.target.value)}
                   placeholder="Enter item title"
                   required
                 />
@@ -252,7 +252,7 @@ export default function EditItemPage({
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) =>
+                  onChange={e =>
                     handleInputChange('description', e.target.value)
                   }
                   placeholder="Describe your item"
@@ -265,7 +265,7 @@ export default function EditItemPage({
                   <Label htmlFor="category">Category</Label>
                   <Select
                     value={formData.category}
-                    onValueChange={(value) =>
+                    onValueChange={value =>
                       handleInputChange('category', value)
                     }
                   >
@@ -322,9 +322,7 @@ export default function EditItemPage({
                 <Label>Images</Label>
                 <ImageUpload
                   images={formData.images}
-                  onImagesChange={(images) =>
-                    handleInputChange('images', images)
-                  }
+                  onImagesChange={images => handleInputChange('images', images)}
                   maxImages={5}
                 />
               </div>

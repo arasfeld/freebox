@@ -43,14 +43,14 @@ export function ImageModal({
           break;
         case 'ArrowLeft':
           if (images.length > 1) {
-            setCurrentIndex((prev) =>
+            setCurrentIndex(prev =>
               prev === 0 ? images.length - 1 : prev - 1
             );
           }
           break;
         case 'ArrowRight':
           if (images.length > 1) {
-            setCurrentIndex((prev) =>
+            setCurrentIndex(prev =>
               prev === images.length - 1 ? 0 : prev + 1
             );
           }
@@ -108,7 +108,7 @@ export function ImageModal({
             size="icon"
             className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20"
             onClick={() =>
-              setCurrentIndex((prev) =>
+              setCurrentIndex(prev =>
                 prev === 0 ? images.length - 1 : prev - 1
               )
             }
@@ -120,7 +120,7 @@ export function ImageModal({
             size="icon"
             className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20"
             onClick={() =>
-              setCurrentIndex((prev) =>
+              setCurrentIndex(prev =>
                 prev === images.length - 1 ? 0 : prev + 1
               )
             }

@@ -109,13 +109,13 @@ export const ItemCard = React.memo(function ItemCard({
   const hasMultipleImages = item.images.length > 1;
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) =>
+    setCurrentImageIndex(prev =>
       prev === item.images.length - 1 ? 0 : prev + 1
     );
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) =>
+    setCurrentImageIndex(prev =>
       prev === 0 ? item.images.length - 1 : prev - 1
     );
   };
@@ -172,7 +172,7 @@ export const ItemCard = React.memo(function ItemCard({
                     variant="ghost"
                     size="sm"
                     className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 text-gray-800 h-8 w-8 p-0 rounded-full"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       prevImage();
                     }}
@@ -183,7 +183,7 @@ export const ItemCard = React.memo(function ItemCard({
                     variant="ghost"
                     size="sm"
                     className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 text-gray-800 h-8 w-8 p-0 rounded-full"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       nextImage();
                     }}
@@ -201,7 +201,7 @@ export const ItemCard = React.memo(function ItemCard({
                             ? 'bg-white'
                             : 'bg-white/50 hover:bg-white/75'
                         }`}
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation();
                           setCurrentImageIndex(index);
                         }}

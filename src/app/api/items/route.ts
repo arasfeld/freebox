@@ -91,11 +91,11 @@ export async function GET(request: NextRequest) {
     });
 
     // Add additional fields for the frontend
-    const itemsWithMetadata = items.map((item) => ({
+    const itemsWithMetadata = items.map(item => ({
       ...item,
       isOwner: currentUserId === item.userId,
       hasExpressedInterest: currentUserId
-        ? item.interests.some((interest) => interest.userId === currentUserId)
+        ? item.interests.some(interest => interest.userId === currentUserId)
         : false,
     }));
 
